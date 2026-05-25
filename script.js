@@ -1,5 +1,6 @@
   
   
+  
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -912,23 +913,28 @@
         }
       }
 
-    function scaleNutrients() {}
-      const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
-      const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
+      function scaleNutrients() {
+  // 1. Werte aus den Feldern holen
+  const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
+  const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
 
-      if (refW <= 0) return;
+  if (refW <= 0) return;
 
-      const factor = yourW / refW;
+  // 2. Faktor berechnen
+  const factor = yourW / refW;
 
-      const scaledCal = Math.round(baseNutrients.cal * factor);
-      const scaledPro = parseFloat((baseNutrients.pro * factor).toFixed(1));
-      const scaledCarbs = parseFloat((baseNutrients.carbs * factor).toFixed(1));
-      const scaledFat = parseFloat((baseNutrients.fat * factor).toFixed(1));
+  // 3. Werte basierend auf den gespeicherten baseNutrients skalieren
+  const scaledCal = Math.round(baseNutrients.cal * factor);
+  const scaledPro = parseFloat((baseNutrients.pro * factor).toFixed(1));
+  const scaledCarbs = parseFloat((baseNutrients.carbs * factor).toFixed(1));
+  const scaledFat = parseFloat((baseNutrients.fat * factor).toFixed(1));
 
-      document.getElementById('res-cal').value = scaledCal;
-      document.getElementById('res-pro').value = scaledPro;
-      document.getElementById('res-carbs').value = scaledCarbs;
-      document.getElementById('res-fat').value = scaledFat;
+  // 4. In die Eingabefelder zurückschreiben
+  document.getElementById('res-cal').value = scaledCal;
+  document.getElementById('res-pro').value = scaledPro;
+  document.getElementById('res-carbs').value = scaledCarbs;
+  document.getElementById('res-fat').value = scaledFat;
+}
     }
 
     function updateBaseFromInputs() {
