@@ -521,17 +521,14 @@
         </div>
 
         <div id="live-rechner" class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50 space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-              <i data-lucide="scale" class="w-3.5 h-3.5 text-purple-500"></i> Portion anpassen
-            </span>
-            <span class="text-[9px] bg-purple-100 text-purple-700 font-black px-2 py-0.5 rounded-full">LIVE RECHNER</span>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
+          <div class="flex items-center gap-1 bg-white border border-purple-200 focus-within:border-purple-500 rounded-xl px-2.5 py-1.5 mt-1 transition-colors">
+  <input type="number" id="res-your-weight" class="w-full outline-none font-black text-sm text-purple-700 bg-transparent" value="100">
+  <span class="text-xs font-bold text-gray-400">g</span>
+  <button onclick="haptic(); scaleNutrients();" class="ml-2 bg-purple-500 text-white text-[10px] font-bold px-3 py-1 rounded-lg">OK</button>
+</div>
               <label class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Referenz / Basis</label>
               <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 mt-1">
-                <input type="number" id="res-ref-weight" class="w-full outline-none font-bold text-sm text-gray-700 bg-transparent" value="100" oninput="scaleNutrients()">
+                <input type="number" id="res-ref-weight" class="w-full outline-none font-bold text-sm text-gray-700 bg-transparent" value="100" oninput="">
                 <span class="text-xs font-bold text-gray-400">g</span>
               </div>
             </div>
