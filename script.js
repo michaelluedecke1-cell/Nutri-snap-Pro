@@ -1,6 +1,4 @@
-  
-  
-  
+ 
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -913,7 +911,9 @@
         }
       }
 
-      function scaleNutrients() {
+     
+    }
+function scaleNutrients() {
   // 1. Werte aus den Feldern holen
   const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
   const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
@@ -935,8 +935,6 @@
   document.getElementById('res-carbs').value = scaledCarbs;
   document.getElementById('res-fat').value = scaledFat;
 }
-    }
-
     function updateBaseFromInputs() {
       const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
       const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
