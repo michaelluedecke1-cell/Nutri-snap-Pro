@@ -1,0 +1,20 @@
+
+{
+  "name": "NutriSnap AI - Premium Tracker",
+  "short_name": "NutriSnap",
+  "description": "Premium KI-gestützter Kalorien- und Nährwerttracker",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://images.icon-icons.com/612/PNG/512/allergen_wheat_icon-icons.com_56427.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

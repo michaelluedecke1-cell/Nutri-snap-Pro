@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>NutriSnap AI - Premium Tracker</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- PWA Manifest Verknüpfung -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Mobile App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#10b981">
+  <link rel="apple-touch-icon" href="1000032975.png">
+  
+ <link rel="stylesheet" href="style.css">
+
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased pb-28 selection:bg-emerald-200 overflow-x-hidden">
+
+  <!-- ================= HEADER ================= -->
+  <header class="bg-white shadow-sm sticky top-0 z-30 px-4 py-2.5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <img src="1000032975.png" alt="Logo" class="w-8 h-8 rounded-full shadow-sm object-cover" onerror="this.style.display='none'">
+      <span class="font-black text-emerald-600 tracking-tight text-xl">NutriSnap</span>
+    </div>
+    
+    <!-- Streak Counter -->
+    <div class="flex items-center gap-1.5 bg-orange-50 border border-orange-100 text-orange-600 px-3 py-1.5 rounded-full shadow-sm cursor-help" title="Deine Tages-Serie">
+      <i data-lucide="flame" class="w-4 h-4 fill-orange-500"></i>
+      <span class="font-black text-sm tracking-wide" id="streak-counter">0</span>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="p-4 max-w-2xl mx-auto space-y-6" id="main-content">
+    
+    <!-- Date Navigation -->
+    <div id="date-nav-container" class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm border border-gray-100 transition-all">
+      <button onclick="changeDate(-1)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors active:scale-95">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+      </button>
+      <div class="flex items-center gap-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-emerald-500"></i>
+        <h2 id="current-date-display" class="text-base font-bold text-gray-700">Heute</h2>
+      </div>
+      <button onclick="changeDate(1)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors active:scale-95" id="btn-next-day">
+        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- ================= VIEW 1: DASHBOARD ================= -->
+    <div id="view-dashboard" class="space-y-6 block fade-in">
+      
+      <!-- Dashboard Widget -->
+      <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between gap-6 mb-6">
+          <div class="relative w-32 h-32 rounded-full donut-chart flex items-center justify-center shrink-0 shadow-inner pointer-events-none" id="macro-donut">
+            <div class="absolute inset-0 rounded-full shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] pointer-events-none"></div>
+            <div class="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center shadow-sm z-10 pointer-events-none">
+              <span class="text-2xl font-black text-gray-800 tracking-tighter leading-none" id="total-calories">0</span>
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">KCAL</span>
+            </div>
+          </div>
+
+          <div class="flex-1">
+            <div class="text-sm font-bold text-gray-500 mb-1">Tagesziel: <span id="goal-calories-display">2000</span></div>
+            <div class="flex items-end gap-2 mb-3">
+              <div class="text-3xl font-black transition-colors" id="remaining-calories">2000</div>
+              <div class="text-sm font-medium text-gray-400 mb-1">übrig</div>
+            </div>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div id="cal-progress" class="h-full bg-emerald-500 progress-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500 font-medium">Kohlenh.</span><span class="font-bold text-gray-700" id="total-carbs">0g</span></div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden"><div id="carbs-progress" class="h-full bg-blue-400 progress-bar" style="width: 0%"></div></div>
+            <div class="text-[9px] text-gray-400 mt-1 text-right" id="goal-carbs-text">Ziel: 0g</div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500 font-medium">Protein</span><span class="font-bold text-gray-700" id="total-protein">0g</span></div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden"><div id="protein-progress" class="h-full bg-red-400 progress-bar" style="width: 0%"></div></div>
+            <div class="text-[9px] text-gray-400 mt-1 text-right" id="goal-pro-text">Ziel: 0g</div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500 font-medium">Fett</span><span class="font-bold text-gray-700" id="total-fat">0g</span></div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden"><div id="fat-progress" class="h-full bg-yellow-400 progress-bar" style="width: 0%"></div></div>
+            <div class="text-[9px] text-gray-400 mt-1 text-right" id="goal-fat-text">Ziel: 0g</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid für Wasser & Gewicht -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Water Tracker -->
+        <section class="bg-blue-50 rounded-3xl p-5 border border-blue-100 relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 text-blue-100/50 pointer-events-none"><i data-lucide="glass-water" class="w-24 h-24"></i></div>
+          
+          <div class="relative z-10 flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-blue-900 flex items-center gap-2"><i data-lucide="glass-water" class="w-4 h-4 text-blue-500"></i> Wasser</h3>
+              <p class="text-xs text-blue-600/70 font-medium">Ziel: <span id="water-goal-display">8</span> Gläser</p>
+            </div>
+            <div class="text-xl font-black text-blue-600" id="water-count-display">0</div>
+          </div>
+          <div class="relative z-20 flex justify-between items-center bg-white/60 p-2 rounded-2xl backdrop-blur-sm border border-white/50">
+            <button onclick="updateWater(-1)" class="relative z-30 w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow-sm text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors active:scale-95"><i data-lucide="minus" class="w-5 h-5 pointer-events-none"></i></button>
+            <div class="flex gap-1 relative z-30" id="water-glasses-container"></div>
+            <button onclick="updateWater(1)" class="relative z-30 w-10 h-10 flex items-center justify-center rounded-xl bg-blue-500 shadow-sm text-white hover:bg-blue-600 transition-colors active:scale-95"><i data-lucide="plus" class="w-5 h-5 pointer-events-none"></i></button>
+          </div>
+        </section>
+
+        <!-- Weight Tracker -->
+        <section class="bg-purple-50 rounded-3xl p-5 border border-purple-100 relative overflow-hidden">
+          <div class="absolute -right-2 -top-2 text-purple-100/50 pointer-events-none"><i data-lucide="scale" class="w-20 h-20"></i></div>
+          
+          <div class="relative z-10 flex flex-col h-full justify-between">
+            <div>
+              <h3 class="text-base font-bold text-purple-900 flex items-center gap-2"><i data-lucide="scale" class="w-4 h-4 text-purple-500"></i> Körpergewicht</h3>
+              <p class="text-[11px] text-purple-600/70 font-bold" id="weight-avg-display">Ø dieser Woche: -- kg</p>
+            </div>
+            <div class="flex items-end justify-between mt-4 relative z-20">
+              <div class="text-3xl font-black text-purple-700 leading-none"><span id="weight-display">--</span><span class="text-base font-bold text-purple-400 ml-1">kg</span></div>
+              <button onclick="openWeightModal()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-purple-500 shadow-sm text-white hover:bg-purple-600 transition-colors active:scale-95 relative z-30"><i data-lucide="pen" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Wochen-Übersicht Chart -->
+      <section class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-500" id="chart-icon"></i> 
+            <span id="chart-title">Deine letzten 7 Tage (Kcal)</span>
+          </h3>
+          <div class="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200">
+            <button id="btn-chart-kcal" onclick="setChartMode('kcal')" class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-white text-gray-800 shadow-sm transition-all">Kcal</button>
+            <button id="btn-chart-weight" onclick="setChartMode('weight')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-500 transition-all">Gewicht</button>
+          </div>
+        </div>
+        <div class="flex items-end justify-between h-28 gap-1.5" id="weekly-chart-container">
+          <!-- Bars injected via JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 2: TAGEBUCH ================= -->
+    <div id="view-diary" class="hidden space-y-6 fade-in">
+      <section>
+        <div class="flex justify-between items-center mb-4 px-1">
+          <h3 class="text-lg font-bold text-gray-800">Deine Mahlzeiten</h3>
+          <span class="text-sm font-bold text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 shadow-sm" id="diary-kcal-total">0 kcal</span>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-16 bg-white rounded-3xl border border-gray-100 border-dashed shadow-sm">
+          <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="utensils-crossed" class="w-8 h-8 text-gray-300"></i>
+          </div>
+          <p class="text-gray-600 font-bold text-lg mb-1">Tagebuch ist leer</p>
+          <p class="text-sm text-gray-400">Wechsle zum "Hinzufügen"-Tab unten.</p>
+        </div>
+        
+        <div id="meals-container" class="space-y-4 pb-8">
+          <!-- Mahlzeiten werden dynamisch hier injiziert -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 3: HINZUFÜGEN ================= -->
+    <div id="view-add" class="hidden space-y-6 fade-in">
+      <section class="bg-transparent rounded-3xl shadow-none border-none">
+        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 px-2">
+          <div class="p-1.5 bg-purple-100 rounded-lg"><i data-lucide="plus-circle" class="w-5 h-5 text-purple-600"></i></div>
+          Mahlzeit Erfassen
+        </h3>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <!-- Foto Scan -->
+          <button onclick="haptic(); startAiPhoto('meal');" class="relative overflow-hidden flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 transition-transform active:scale-95">
+            <div class="absolute -right-4 -top-4 opacity-20 pointer-events-none"><i data-lucide="camera" class="w-24 h-24"></i></div>
+            <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm z-10 pointer-events-none">
+              <i data-lucide="camera" class="w-7 h-7 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide z-10 text-center pointer-events-none">KI Foto<br>Scan</span>
+          </button>
+          
+          <!-- Text Scan -->
+          <button onclick="haptic(); startAiText();" class="relative overflow-hidden flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-95">
+            <div class="absolute -right-4 -top-4 opacity-20 pointer-events-none"><i data-lucide="sparkles" class="w-24 h-24"></i></div>
+            <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm z-10 pointer-events-none">
+              <i data-lucide="sparkles" class="w-7 h-7 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide z-10 text-center pointer-events-none">KI Text<br>Eingabe</span>
+          </button>
+        </div>
+
+        <!-- Nährwerttabelle scannen -->
+        <button onclick="haptic(); startAiPhoto('label');" class="w-full flex items-center justify-between p-5 mb-4 rounded-3xl bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-900/30 transition-transform active:scale-[0.98]">
+          <div class="flex items-center gap-4 pointer-events-none">
+            <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <i data-lucide="scan-line" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="text-left">
+              <div class="font-bold text-white text-lg">Tabelle scannen</div>
+              <div class="text-xs text-gray-400 font-medium">Nährwerte abfotografieren</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500 pointer-events-none"></i>
+        </button>
+
+<button onclick="haptic(); openScanner();" class="w-full flex items-center justify-between p-5 mb-4 rounded-3xl bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 transition-transform active:scale-[0.98]">
+          <div class="flex items-center gap-4 pointer-events-none">
+            <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <i data-lucide="barcode" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="text-left">
+              <div class="font-bold text-white text-lg">Barcode scannen</div>
+              <div class="text-xs text-indigo-100 font-medium">Produkt direkt finden</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-indigo-200 pointer-events-none"></i>
+        </button>
+        <div class="grid grid-cols-1 gap-4">
+          <button onclick="haptic(); openFavorites();" class="flex items-center gap-4 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+            <div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0 pointer-events-none">
+              <i data-lucide="star" class="w-6 h-6"></i>
+            </div>
+            <div class="text-left flex-1 pointer-events-none">
+              <div class="font-bold text-gray-800 text-lg">Aus Favoriten</div>
+              <div class="text-xs text-gray-500 font-medium">Gespeicherte Mahlzeiten laden</div>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 pointer-events-none"></i>
+          </button>
+
+          <button onclick="haptic(); openManualInput();" class="flex items-center gap-4 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-purple-500/20 shrink-0 pointer-events-none">
+              <i data-lucide="pen-line" class="w-6 h-6"></i>
+            </div>
+            <div class="text-left flex-1 pointer-events-none">
+              <div class="font-bold text-gray-800 text-lg">Manuell Eintragen</div>
+              <div class="text-xs text-gray-500 font-medium">Nährwerte selbst tippen</div>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 pointer-events-none"></i>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 4: PROFIL / SETTINGS ================= -->
+    <div id="view-settings" class="hidden space-y-6 fade-in">
+      <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <div class="p-1.5 bg-orange-100 rounded-lg"><i data-lucide="settings" class="w-5 h-5 text-orange-600"></i></div>
+          Einstellungen
+        </h3>
+        
+        <!-- PWA Install Banner -->
+        <div id="install-app-btn" class="hidden mb-6 bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl border border-emerald-400 flex items-center justify-between shadow-lg shadow-emerald-500/30">
+          <div>
+            <h4 class="font-black text-white text-sm flex items-center gap-1.5">
+              <i data-lucide="download-cloud" class="w-5 h-5"></i> App installieren
+            </h4>
+            <p class="text-[11px] text-emerald-100 mt-0.5 leading-tight">Zum Startbildschirm hinzufügen</p>
+          </div>
+          <button onclick="haptic(); installPWA();" class="px-4 py-2 bg-white text-emerald-600 font-black rounded-xl text-xs shadow-sm hover:bg-emerald-50 transition-all active:scale-95">
+            Installieren
+          </button>
+        </div>
+
+        <!-- Kalorienrechner Banner -->
+        <div class="mb-6 bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl border border-blue-200 flex items-center justify-between shadow-sm">
+          <div>
+            <h4 class="font-bold text-blue-900 text-sm flex items-center gap-1.5">
+              <i data-lucide="calculator" class="w-4 h-4"></i> Kalorienrechner
+            </h4>
+            <p class="text-[11px] text-blue-700/80 mt-0.5 leading-tight">Ermittle deinen genauen Bedarf</p>
+          </div>
+          <button onclick="haptic(); openCalcModal();" class="px-4 py-2 bg-blue-500 text-white font-bold rounded-xl text-xs shadow-sm hover:bg-blue-600 transition-all active:scale-95">
+            Berechnen
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Kcal Ziel / Tag</label>
+              <input type="number" id="goal-kcal-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-gray-800 text-lg" placeholder="2000">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Wasser Gläser</label>
+              <input type="number" id="goal-water-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-bold text-gray-800 text-lg" placeholder="8">
+            </div>
+          </div>
+
+          <!-- Makro-Verteilung -->
+          <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4"></i> Makro-Verteilung (%)
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-[10px] text-gray-400 font-bold block mb-1">Kohlenh.</label>
+                <input type="number" id="macro-c" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold text-blue-600 text-sm outline-none focus:border-blue-500" placeholder="40">
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400 font-bold block mb-1">Protein</label>
+                <input type="number" id="macro-p" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold text-red-600 text-sm outline-none focus:border-red-500" placeholder="30">
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400 font-bold block mb-1">Fett</label>
+                <input type="number" id="macro-f" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold text-yellow-600 text-sm outline-none focus:border-yellow-500" placeholder="30">
+              </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-2 text-center" id="macro-sum-warning">Muss zusammen 100% ergeben.</p>
+          </div>
+
+          <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <label class="block text-sm font-bold text-emerald-900 mb-2 flex items-center gap-2">
+              <i data-lucide="key" class="w-4 h-4"></i> Gemini API Schlüssel
+            </label>
+            <input type="password" id="api-key-input" class="w-full bg-white border border-emerald-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm" placeholder="AIzaSy...">
+            <p class="text-[10px] text-emerald-700/70 mt-2 leading-relaxed">Wird lokal gespeichert und für die KI benötigt.</p>
+          </div>
+
+          <hr class="border-gray-100">
+
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-3 ml-1">Datensicherung</label>
+            <div class="flex gap-3">
+              <button onclick="haptic(); exportData();" class="flex-1 py-3 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 border border-gray-200 transition-colors flex items-center justify-center gap-2 text-sm active:scale-95">
+                <i data-lucide="download" class="w-4 h-4"></i> Backup
+              </button>
+              <label class="flex-1 py-3 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 border border-gray-200 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-95">
+                <i data-lucide="upload" class="w-4 h-4"></i> Import
+                <input type="file" id="import-file" class="hidden" accept=".json" onchange="haptic(); importData(event);">
+              </label>
+            </div>
+          </div>
+
+          <button onclick="haptic(); saveSettings();" class="w-full mt-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-sm active:scale-95">
+            Einstellungen Speichern
+          </button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ================= BOTTOM NAVIGATION ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-[68px] z-30 pb-safe shadow-[0_-4px_25px_rgba(0,0,0,0.05)]">
+    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center w-full h-full text-emerald-500 transition-colors gap-1">
+      <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Dashboard</span>
+    </button>
+    
+    <button onclick="switchTab('diary')" id="nav-diary" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-500 transition-colors gap-1">
+      <i data-lucide="book" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Tagebuch</span>
+    </button>
+
+    <button onclick="switchTab('add')" id="nav-add" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-purple-500 transition-colors gap-1">
+      <i data-lucide="plus-circle" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Hinzufügen</span>
+    </button>
+    
+    <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-orange-500 transition-colors gap-1">
+      <i data-lucide="user" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Profil</span>
+    </button>
+  </nav>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Kalorienrechner Modal -->
+  <div id="calc-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeCalcModal(); }">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+      <h3 class="text-xl font-black text-gray-800 mb-5 flex items-center gap-2">
+        <i data-lucide="calculator" class="w-6 h-6 text-blue-500"></i> Kalorienrechner
+      </h3>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 mb-2 block">Geschlecht</label>
+          <div class="flex gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
+            <label class="flex-1 cursor-pointer radio-pill">
+              <input type="radio" name="calc-gender" value="female" class="hidden" checked onchange="haptic(); calculateTDEE();">
+              <div class="py-2 text-center rounded-lg text-sm font-bold text-gray-500 transition-colors">Frau</div>
+            </label>
+            <label class="flex-1 cursor-pointer radio-pill">
+              <input type="radio" name="calc-gender" value="male" class="hidden" onchange="haptic(); calculateTDEE();">
+              <div class="py-2 text-center rounded-lg text-sm font-bold text-gray-500 transition-colors">Mann</div>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Alter</label>
+            <input type="number" id="calc-age" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-gray-800 text-center" placeholder="30" oninput="calculateTDEE()">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Größe (cm)</label>
+            <input type="number" id="calc-height" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-gray-800 text-center" placeholder="170" oninput="calculateTDEE()">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Gew. (kg)</label>
+            <input type="number" id="calc-weight" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-gray-800 text-center" placeholder="70" oninput="calculateTDEE()">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Aktivität (Alltag)</label>
+          <select id="calc-activity" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-gray-800 appearance-none" onchange="calculateTDEE()">
+            <option value="1.2">Sitzend (Kaum Bewegung)</option>
+            <option value="1.375">Leicht (1-3x Sport/Woche)</option>
+            <option value="1.55" selected>Moderat (3-5x Sport/Woche)</option>
+            <option value="1.725">Aktiv (6-7x Sport/Woche)</option>
+            <option value="1.9">Sehr aktiv (Körperl. Arbeit)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Dein Ziel</label>
+          <select id="calc-goal" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-gray-800 appearance-none" onchange="calculateTDEE()">
+            <option value="-500">Abnehmen (-500 kcal)</option>
+            <option value="0" selected>Gewicht halten</option>
+            <option value="300">Muskelaufbau (+300 kcal)</option>
+          </select>
+        </div>
+
+        <div class="mt-4 bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center">
+          <p class="text-xs font-bold text-blue-600/70 uppercase tracking-wider mb-1">Dein Tagesbedarf</p>
+          <div class="text-4xl font-black text-blue-600"><span id="calc-result">--</span> <span class="text-lg font-bold text-blue-400">kcal</span></div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button onclick="haptic(); closeCalcModal();" class="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition-colors">Abbrechen</button>
+        <button onclick="haptic(); applyCalcResult();" class="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-colors shadow-sm">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+<div id="scanner-modal" class="hidden fixed inset-0 bg-gray-900/90 backdrop-blur-md z-[70] flex flex-col p-4" onclick="if(event.target === this) { haptic(); closeScanner(); }">
+    
+    <div class="flex justify-between items-center mb-6 pt-4">
+      <h3 class="text-xl font-black text-white flex items-center gap-2">
+        <i data-lucide="scan-barcode" class="w-6 h-6 text-indigo-400"></i> Scanner
+      </h3>
+      <button onclick="haptic(); closeScanner();" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 relative rounded-3xl overflow-hidden bg-black flex items-center justify-center border-2 border-indigo-500/30">
+      <div id="reader" class="w-full h-full bg-black"></div>
+      
+      <div id="scanner-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10">
+        <i data-lucide="loader-2" class="w-8 h-8 text-indigo-500 animate-spin mb-3"></i>
+        <span class="text-white font-bold text-sm">Starte Kamera...</span>
+      </div>
+      
+      <div class="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
+        <div class="w-3/4 h-48 border-2 border-white/50 rounded-2xl relative">
+          <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-indigo-500 rounded-tl-xl"></div>
+          <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-indigo-500 rounded-tr-xl"></div>
+          <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-indigo-500 rounded-bl-xl"></div>
+          <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-indigo-500 rounded-br-xl"></div>
+          <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.8)] animate-[scan_2s_ease-in-out_infinite]"></div>
+        </div>
+      </div>
+    </div>
+    
+    <p class="text-center text-gray-400 text-sm font-medium mt-6 pb-8">
+      Halte den Barcode in das Viereck.
+    </p>
+  </div>
+  <!-- 2. AI Text Input Modal -->
+  <div id="ai-text-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeAiText(); }">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-xl">
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Was hast du gegessen?</h3>
+      <p class="text-sm text-gray-500 mb-4">z.B. "Ein Stück Apfelkuchen und ein Kaffee"</p>
+      
+      <div class="relative mt-2 mb-4">
+        <textarea id="ai-text-input" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 pr-12 outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none font-medium text-gray-800" placeholder="Deine Mahlzeit..."></textarea>
+        <button id="mic-btn" onclick="haptic(); toggleSpeechRecognition();" class="absolute bottom-3 right-3 p-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm" title="Spracheingabe starten">
+          <i data-lucide="mic" id="mic-icon" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="haptic(); closeAiText();" class="flex-1 py-3 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">Abbrechen</button>
+        <button onclick="haptic(); processAiText();" id="btn-process-text" class="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-colors flex justify-center items-center gap-2 shadow-sm">
+          Analysieren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Result / Manual Edit Modal -->
+  <div id="result-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <h3 class="text-xl font-black text-gray-800 mb-4" id="modal-title">Eintrag</h3>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Mahlzeit</label>
+          <input type="text" id="res-name" class="w-full border-b-2 border-gray-100 py-2 outline-none focus:border-emerald-500 font-bold text-gray-800 text-lg bg-transparent transition-colors">
+        </div>
+
+        <div id="live-rechner" class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+              <i data-lucide="scale" class="w-3.5 h-3.5 text-purple-500"></i> Portion anpassen
+            </span>
+            <span class="text-[9px] bg-purple-100 text-purple-700 font-black px-2 py-0.5 rounded-full">LIVE RECHNER</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Referenz / Basis</label>
+              <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 mt-1">
+                <input type="number" id="res-ref-weight" class="w-full outline-none font-bold text-sm text-gray-700 bg-transparent" value="100" oninput="scaleNutrients()">
+                <span class="text-xs font-bold text-gray-400">g</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Deine Menge</label>
+              <div class="flex items-center gap-1 bg-white border border-purple-200 focus-within:border-purple-500 rounded-xl px-2.5 py-1.5 mt-1 transition-colors">
+                <input type="number" id="res-your-weight" class="w-full outline-none font-black text-sm text-purple-700 bg-transparent" value="100" oninput="scaleNutrients()">
+                <span class="text-xs font-bold text-purple-400">g</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50 relative">
+            <label class="text-[10px] font-bold text-emerald-600/70 uppercase">Kalorien</label>
+            <input type="number" id="res-cal" oninput="updateBaseFromInputs()" class="w-full outline-none font-black text-2xl bg-transparent text-emerald-900 mt-1" placeholder="0">
+          </div>
+          <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Protein (g)</label>
+            <input type="number" id="res-pro" oninput="updateBaseFromInputs()" class="w-full outline-none font-bold text-xl bg-transparent text-gray-700 mt-1" placeholder="0">
+          </div>
+          <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Kohlenh. (g)</label>
+            <input type="number" id="res-carbs" oninput="updateBaseFromInputs()" class="w-full outline-none font-bold text-xl bg-transparent text-gray-700 mt-1" placeholder="0">
+          </div>
+          <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Fett (g)</label>
+            <input type="number" id="res-fat" oninput="updateBaseFromInputs()" class="w-full outline-none font-bold text-xl bg-transparent text-gray-700 mt-1" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <label id="save-fav-container" class="flex items-center gap-3 mt-6 mb-6 cursor-pointer bg-gray-50 p-3 rounded-xl border border-gray-100">
+        <input type="checkbox" id="res-save-fav" class="w-5 h-5 text-emerald-500 rounded border-gray-300 focus:ring-emerald-500">
+        <span class="text-sm font-bold text-gray-700">Als Favorit speichern</span>
+      </label>
+
+      <div class="flex gap-3">
+        <button onclick="haptic(); closeResultModal();" class="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition-colors">Abbrechen</button>
+        <button onclick="haptic(); saveFinalResult();" class="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-sm active:scale-95">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Favorites List Modal -->
+  <div id="fav-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeFavorites(); }">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-xl flex flex-col max-h-[80vh]">
+      <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-3xl">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i data-lucide="star" class="w-5 h-5 text-amber-500"></i> Favoriten</h3>
+        <button onclick="haptic(); closeFavorites();" class="text-gray-400 hover:text-gray-600 p-1 bg-white rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3" id="fav-container"></div>
+    </div>
+  </div>
+
+  <!-- 5. Weight Input & History Modal -->
+  <div id="weight-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeWeightModal(); }">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl text-center max-h-[90vh] overflow-y-auto">
+      <div class="w-16 h-16 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="scale" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-xl font-black text-gray-800 mb-1">Gewicht eintragen</h3>
+      <p class="text-sm text-gray-500 font-medium mb-6" id="weight-date-label">Heute</p>
+      
+      <div class="flex items-center justify-center gap-2 mb-8 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+        <input type="number" id="weight-input" step="0.1" class="w-24 text-center border-b-2 border-purple-300 py-1 outline-none focus:border-purple-600 font-black text-4xl text-gray-800 bg-transparent transition-colors" placeholder="0.0">
+        <span class="text-xl font-bold text-gray-400">kg</span>
+      </div>
+      
+      <div class="flex gap-3 mb-6">
+        <button onclick="haptic(); closeWeightModal();" class="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition-colors">Abbrechen</button>
+        <button onclick="haptic(); saveWeight();" class="flex-1 py-3 bg-purple-500 text-white font-bold rounded-xl hover:bg-purple-600 transition-colors shadow-sm">Speichern</button>
+      </div>
+
+      <!-- Wochenverlauf Liste im Modal -->
+      <div class="border-t border-gray-100 pt-4 text-left">
+        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Verlauf der Woche</h4>
+        <div id="weight-history-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 left-0 right-0 z-[60] flex flex-col items-center pointer-events-none space-y-2 px-4"></div>
+
+  <!-- Hidden File Input for Photo Scan -->
+  <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="processAiPhoto(event)">
+
+  <!-- ================= JAVASCRIPT ================= -->
+    <!-- Date Navigation -->
+    <div id="date-nav-container" class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm border border-gray-100 transition-all">
+      <button onclick="changeDate(-1)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors active:scale-95">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+      </button>
+      <div class="flex items-center gap-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-emerald-500"></i>
+        <h2 id="current-date-display" class="text-base font-bold text-gray-700">Heute</h2>
+      </div>
+      <button onclick="changeDate(1)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors active:scale-95" id="btn-next-day">
+        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- ================= VIEW 1: DASHBOARD ================= -->
+    <div id="view-dashboard" class="space-y-6 block fade-in">
+      
+      <!-- Dashboard Widget -->
+      <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between gap-6 mb-6">
+          <div class="relative w-32 h-32 rounded-full donut-chart flex items-center justify-center shrink-0 shadow-inner pointer-events-none" id="macro-donut">
+            <div class="absolute inset-0 rounded-full shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] pointer-events-none"></div>
+            <div class="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center shadow-sm z-10 pointer-events-none">
+              <span class="text-2xl font-black text-gray-800 tracking-tighter leading-none" id="total-calories">0</span>
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">KCAL</span>
+            </div>
+          </div>
+
+          <div class="flex-1">
+            <div class="text-sm font-bold text-gray-500 mb-1">Tagesziel: <span id="goal-calories-display">2000</span></div>
+            <div class="flex items-end gap-2 mb-3">
+              <div class="text-3xl font-black transition-colors" id="remaining-calories">2000</div>
+              <div class="text-sm font-medium text-gray-400 mb-1">übrig</div>
+            </div>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div id="cal-progress" class="h-full bg-emerald-500 progress-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500 font-medium">Kohlenh.</span><span class="font-bold text-gray-700" id="total-carbs">0g</span></div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden"><div id="carbs-progress" class="h-full bg-blue-400 progress-bar" style="width: 0%"></div></div>
+            <div class="text-[9px] text-gray-400 mt-1 text-right" id="goal-carbs-text">Ziel: 0g</div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500 font-medium">Protein</span><span class="font-bold text-gray-700" id="total-protein">0g</span></div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden"><div id="protein-progress" class="h-full bg-red-400 progress-bar" style="width: 0%"></div></div>
+            <div class="text-[9px] text-gray-400 mt-1 text-right" id="goal-pro-text">Ziel: 0g</div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1.5"><span class="text-gray-500 font-medium">Fett</span><span class="font-bold text-gray-700" id="total-fat">0g</span></div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden"><div id="fat-progress" class="h-full bg-yellow-400 progress-bar" style="width: 0%"></div></div>
+            <div class="text-[9px] text-gray-400 mt-1 text-right" id="goal-fat-text">Ziel: 0g</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid für Wasser & Gewicht -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Water Tracker -->
+        <section class="bg-blue-50 rounded-3xl p-5 border border-blue-100 relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 text-blue-100/50 pointer-events-none"><i data-lucide="glass-water" class="w-24 h-24"></i></div>
+          
+          <div class="relative z-10 flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-blue-900 flex items-center gap-2"><i data-lucide="glass-water" class="w-4 h-4 text-blue-500"></i> Wasser</h3>
+              <p class="text-xs text-blue-600/70 font-medium">Ziel: <span id="water-goal-display">8</span> Gläser</p>
+            </div>
+            <div class="text-xl font-black text-blue-600" id="water-count-display">0</div>
+          </div>
+          <div class="relative z-20 flex justify-between items-center bg-white/60 p-2 rounded-2xl backdrop-blur-sm border border-white/50">
+            <button onclick="updateWater(-1)" class="relative z-30 w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow-sm text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors active:scale-95"><i data-lucide="minus" class="w-5 h-5 pointer-events-none"></i></button>
+            <div class="flex gap-1 relative z-30" id="water-glasses-container"></div>
+            <button onclick="updateWater(1)" class="relative z-30 w-10 h-10 flex items-center justify-center rounded-xl bg-blue-500 shadow-sm text-white hover:bg-blue-600 transition-colors active:scale-95"><i data-lucide="plus" class="w-5 h-5 pointer-events-none"></i></button>
+          </div>
+        </section>
+
+        <!-- Weight Tracker -->
+        <section class="bg-purple-50 rounded-3xl p-5 border border-purple-100 relative overflow-hidden">
+          <div class="absolute -right-2 -top-2 text-purple-100/50 pointer-events-none"><i data-lucide="scale" class="w-20 h-20"></i></div>
+          
+          <div class="relative z-10 flex flex-col h-full justify-between">
+            <div>
+              <h3 class="text-base font-bold text-purple-900 flex items-center gap-2"><i data-lucide="scale" class="w-4 h-4 text-purple-500"></i> Körpergewicht</h3>
+              <p class="text-[11px] text-purple-600/70 font-bold" id="weight-avg-display">Ø dieser Woche: -- kg</p>
+            </div>
+            <div class="flex items-end justify-between mt-4 relative z-20">
+              <div class="text-3xl font-black text-purple-700 leading-none"><span id="weight-display">--</span><span class="text-base font-bold text-purple-400 ml-1">kg</span></div>
+              <button onclick="openWeightModal()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-purple-500 shadow-sm text-white hover:bg-purple-600 transition-colors active:scale-95 relative z-30"><i data-lucide="pen" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Wochen-Übersicht Chart -->
+      <section class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-500" id="chart-icon"></i> 
+            <span id="chart-title">Deine letzten 7 Tage (Kcal)</span>
+          </h3>
+          <div class="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200">
+            <button id="btn-chart-kcal" onclick="setChartMode('kcal')" class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-white text-gray-800 shadow-sm transition-all">Kcal</button>
+            <button id="btn-chart-weight" onclick="setChartMode('weight')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-500 transition-all">Gewicht</button>
+          </div>
+        </div>
+        <div class="flex items-end justify-between h-28 gap-1.5" id="weekly-chart-container">
+          <!-- Bars injected via JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 2: TAGEBUCH ================= -->
+    <div id="view-diary" class="hidden space-y-6 fade-in">
+      <section>
+        <div class="flex justify-between items-center mb-4 px-1">
+          <h3 class="text-lg font-bold text-gray-800">Deine Mahlzeiten</h3>
+          <span class="text-sm font-bold text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 shadow-sm" id="diary-kcal-total">0 kcal</span>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-16 bg-white rounded-3xl border border-gray-100 border-dashed shadow-sm">
+          <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="utensils-crossed" class="w-8 h-8 text-gray-300"></i>
+          </div>
+          <p class="text-gray-600 font-bold text-lg mb-1">Tagebuch ist leer</p>
+          <p class="text-sm text-gray-400">Wechsle zum "Hinzufügen"-Tab unten.</p>
+        </div>
+        
+        <div id="meals-container" class="space-y-4 pb-8">
+          <!-- Mahlzeiten werden dynamisch hier injiziert -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 3: HINZUFÜGEN ================= -->
+    <div id="view-add" class="hidden space-y-6 fade-in">
+      <section class="bg-transparent rounded-3xl shadow-none border-none">
+        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 px-2">
+          <div class="p-1.5 bg-purple-100 rounded-lg"><i data-lucide="plus-circle" class="w-5 h-5 text-purple-600"></i></div>
+          Mahlzeit Erfassen
+        </h3>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <!-- Foto Scan -->
+          <button onclick="haptic(); startAiPhoto('meal');" class="relative overflow-hidden flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 transition-transform active:scale-95">
+            <div class="absolute -right-4 -top-4 opacity-20 pointer-events-none"><i data-lucide="camera" class="w-24 h-24"></i></div>
+            <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm z-10 pointer-events-none">
+              <i data-lucide="camera" class="w-7 h-7 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide z-10 text-center pointer-events-none">KI Foto<br>Scan</span>
+          </button>
+          
+          <!-- Text Scan -->
+          <button onclick="haptic(); startAiText();" class="relative overflow-hidden flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-95">
+            <div class="absolute -right-4 -top-4 opacity-20 pointer-events-none"><i data-lucide="sparkles" class="w-24 h-24"></i></div>
+            <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm z-10 pointer-events-none">
+              <i data-lucide="sparkles" class="w-7 h-7 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide z-10 text-center pointer-events-none">KI Text<br>Eingabe</span>
+          </button>
+        </div>
+
+        <!-- Nährwerttabelle scannen -->
+        <button onclick="haptic(); startAiPhoto('label');" class="w-full flex items-center justify-between p-5 mb-4 rounded-3xl bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-900/30 transition-transform active:scale-[0.98]">
+          <div class="flex items-center gap-4 pointer-events-none">
+            <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <i data-lucide="scan-line" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="text-left">
+              <div class="font-bold text-white text-lg">Tabelle scannen</div>
+              <div class="text-xs text-gray-400 font-medium">Nährwerte abfotografieren</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500 pointer-events-none"></i>
+        </button>
+
+        <div class="grid grid-cols-1 gap-4">
+          <button onclick="haptic(); openFavorites();" class="flex items-center gap-4 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+            <div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0 pointer-events-none">
+              <i data-lucide="star" class="w-6 h-6"></i>
+            </div>
+            <div class="text-left flex-1 pointer-events-none">
+              <div class="font-bold text-gray-800 text-lg">Aus Favoriten</div>
+              <div class="text-xs text-gray-500 font-medium">Gespeicherte Mahlzeiten laden</div>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 pointer-events-none"></i>
+          </button>
+
+          <button onclick="haptic(); openManualInput();" class="flex items-center gap-4 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-purple-500/20 shrink-0 pointer-events-none">
+              <i data-lucide="pen-line" class="w-6 h-6"></i>
+            </div>
+            <div class="text-left flex-1 pointer-events-none">
+              <div class="font-bold text-gray-800 text-lg">Manuell Eintragen</div>
+              <div class="text-xs text-gray-500 font-medium">Nährwerte selbst tippen</div>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 pointer-events-none"></i>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 4: PROFIL / SETTINGS ================= -->
+    <div id="view-settings" class="hidden space-y-6 fade-in">
+      <section class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <div class="p-1.5 bg-orange-100 rounded-lg"><i data-lucide="settings" class="w-5 h-5 text-orange-600"></i></div>
+          Einstellungen
+        </h3>
+        
+        <!-- PWA Install Banner -->
+        <div id="install-app-btn" class="hidden mb-6 bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl border border-emerald-400 flex items-center justify-between shadow-lg shadow-emerald-500/30">
+          <div>
+            <h4 class="font-black text-white text-sm flex items-center gap-1.5">
+              <i data-lucide="download-cloud" class="w-5 h-5"></i> App installieren
+            </h4>
+            <p class="text-[11px] text-emerald-100 mt-0.5 leading-tight">Zum Startbildschirm hinzufügen</p>
+          </div>
+          <button onclick="haptic(); installPWA();" class="px-4 py-2 bg-white text-emerald-600 font-black rounded-xl text-xs shadow-sm hover:bg-emerald-50 transition-all active:scale-95">
+            Installieren
+          </button>
+        </div>
+
+        <!-- Kalorienrechner Banner -->
+        <div class="mb-6 bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl border border-blue-200 flex items-center justify-between shadow-sm">
+          <div>
+            <h4 class="font-bold text-blue-900 text-sm flex items-center gap-1.5">
+              <i data-lucide="calculator" class="w-4 h-4"></i> Kalorienrechner
+            </h4>
+            <p class="text-[11px] text-blue-700/80 mt-0.5 leading-tight">Ermittle deinen genauen Bedarf</p>
+          </div>
+          <button onclick="haptic(); openCalcModal();" class="px-4 py-2 bg-blue-500 text-white font-bold rounded-xl text-xs shadow-sm hover:bg-blue-600 transition-all active:scale-95">
+            Berechnen
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Kcal Ziel / Tag</label>
+              <input type="number" id="goal-kcal-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-gray-800 text-lg" placeholder="2000">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Wasser Gläser</label>
+              <input type="number" id="goal-water-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-bold text-gray-800 text-lg" placeholder="8">
+            </div>
+          </div>
+
+          <!-- Makro-Verteilung -->
+          <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4"></i> Makro-Verteilung (%)
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-[10px] text-gray-400 font-bold block mb-1">Kohlenh.</label>
+                <input type="number" id="macro-c" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold text-blue-600 text-sm outline-none focus:border-blue-500" placeholder="40">
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400 font-bold block mb-1">Protein</label>
+                <input type="number" id="macro-p" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold text-red-600 text-sm outline-none focus:border-red-500" placeholder="30">
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400 font-bold block mb-1">Fett</label>
+                <input type="number" id="macro-f" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold text-yellow-600 text-sm outline-none focus:border-yellow-500" placeholder="30">
+              </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-2 text-center" id="macro-sum-warning">Muss zusammen 100% ergeben.</p>
+          </div>
+
+          <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <label class="block text-sm font-bold text-emerald-900 mb-2 flex items-center gap-2">
+              <i data-lucide="key" class="w-4 h-4"></i> Gemini API Schlüssel
+            </label>
+            <input type="password" id="api-key-input" class="w-full bg-white border border-emerald-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm" placeholder="AIzaSy...">
+            <p class="text-[10px] text-emerald-700/70 mt-2 leading-relaxed">Wird lokal gespeichert und für die KI benötigt.</p>
+          </div>
+
+          <hr class="border-gray-100">
+
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-3 ml-1">Datensicherung</label>
+            <div class="flex gap-3">
+              <button onclick="haptic(); exportData();" class="flex-1 py-3 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 border border-gray-200 transition-colors flex items-center justify-center gap-2 text-sm active:scale-95">
+                <i data-lucide="download" class="w-4 h-4"></i> Backup
+              </button>
+              <label class="flex-1 py-3 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 border border-gray-200 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer active:scale-95">
+                <i data-lucide="upload" class="w-4 h-4"></i> Import
+                <input type="file" id="import-file" class="hidden" accept=".json" onchange="haptic(); importData(event);">
+              </label>
+            </div>
+          </div>
+
+          <button onclick="haptic(); saveSettings();" class="w-full mt-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-sm active:scale-95">
+            Einstellungen Speichern
+          </button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ================= BOTTOM NAVIGATION ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-[68px] z-30 pb-safe shadow-[0_-4px_25px_rgba(0,0,0,0.05)]">
+    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center w-full h-full text-emerald-500 transition-colors gap-1">
+      <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Dashboard</span>
+    </button>
+    
+    <button onclick="switchTab('diary')" id="nav-diary" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-500 transition-colors gap-1">
+      <i data-lucide="book" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Tagebuch</span>
+    </button>
+
+    <button onclick="switchTab('add')" id="nav-add" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-purple-500 transition-colors gap-1">
+      <i data-lucide="plus-circle" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Hinzufügen</span>
+    </button>
+    
+    <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-orange-500 transition-colors gap-1">
+      <i data-lucide="user" class="w-6 h-6"></i>
+      <span class="text-[10px] font-bold tracking-wide">Profil</span>
+    </button>
+  </nav>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Kalorienrechner Modal -->
+  <div id="calc-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeCalcModal(); }">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+      <h3 class="text-xl font-black text-gray-800 mb-5 flex items-center gap-2">
+        <i data-lucide="calculator" class="w-6 h-6 text-blue-500"></i> Kalorienrechner
+      </h3>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 mb-2 block">Geschlecht</label>
+          <div class="flex gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
+            <label class="flex-1 cursor-pointer radio-pill">
+              <input type="radio" name="calc-gender" value="female" class="hidden" checked onchange="haptic(); calculateTDEE();">
+              <div class="py-2 text-center rounded-lg text-sm font-bold text-gray-500 transition-colors">Frau</div>
+            </label>
+            <label class="flex-1 cursor-pointer radio-pill">
+              <input type="radio" name="calc-gender" value="male" class="hidden" onchange="haptic(); calculateTDEE();">
+              <div class="py-2 text-center rounded-lg text-sm font-bold text-gray-500 transition-colors">Mann</div>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Alter</label>
+            <input type="number" id="calc-age" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-gray-800 text-center" placeholder="30" oninput="calculateTDEE()">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Größe (cm)</label>
+            <input type="number" id="calc-height" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-gray-800 text-center" placeholder="170" oninput="calculateTDEE()">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Gew. (kg)</label>
+            <input type="number" id="calc-weight" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 outline-none focus:border-blue-500 font-bold text-gray-800 text-center" placeholder="70" oninput="calculateTDEE()">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Aktivität (Alltag)</label>
+          <select id="calc-activity" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-gray-800 appearance-none" onchange="calculateTDEE()">
+            <option value="1.2">Sitzend (Kaum Bewegung)</option>
+            <option value="1.375">Leicht (1-3x Sport/Woche)</option>
+            <option value="1.55" selected>Moderat (3-5x Sport/Woche)</option>
+            <option value="1.725">Aktiv (6-7x Sport/Woche)</option>
+            <option value="1.9">Sehr aktiv (Körperl. Arbeit)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1 block mb-1">Dein Ziel</label>
+          <select id="calc-goal" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-gray-800 appearance-none" onchange="calculateTDEE()">
+            <option value="-500">Abnehmen (-500 kcal)</option>
+            <option value="0" selected>Gewicht halten</option>
+            <option value="300">Muskelaufbau (+300 kcal)</option>
+          </select>
+        </div>
+
+        <div class="mt-4 bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center">
+          <p class="text-xs font-bold text-blue-600/70 uppercase tracking-wider mb-1">Dein Tagesbedarf</p>
+          <div class="text-4xl font-black text-blue-600"><span id="calc-result">--</span> <span class="text-lg font-bold text-blue-400">kcal</span></div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button onclick="haptic(); closeCalcModal();" class="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition-colors">Abbrechen</button>
+        <button onclick="haptic(); applyCalcResult();" class="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-colors shadow-sm">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. AI Text Input Modal -->
+  <div id="ai-text-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeAiText(); }">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-xl">
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Was hast du gegessen?</h3>
+      <p class="text-sm text-gray-500 mb-4">z.B. "Ein Stück Apfelkuchen und ein Kaffee"</p>
+      
+      <div class="relative mt-2 mb-4">
+        <textarea id="ai-text-input" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 pr-12 outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none font-medium text-gray-800" placeholder="Deine Mahlzeit..."></textarea>
+        <button id="mic-btn" onclick="haptic(); toggleSpeechRecognition();" class="absolute bottom-3 right-3 p-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm" title="Spracheingabe starten">
+          <i data-lucide="mic" id="mic-icon" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="haptic(); closeAiText();" class="flex-1 py-3 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">Abbrechen</button>
+        <button onclick="haptic(); processAiText();" id="btn-process-text" class="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-colors flex justify-center items-center gap-2 shadow-sm">
+          Analysieren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Result / Manual Edit Modal -->
+  <div id="result-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <h3 class="text-xl font-black text-gray-800 mb-4" id="modal-title">Eintrag</h3>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Mahlzeit</label>
+          <input type="text" id="res-name" class="w-full border-b-2 border-gray-100 py-2 outline-none focus:border-emerald-500 font-bold text-gray-800 text-lg bg-transparent transition-colors">
+        </div>
+
+        <div id="live-rechner" class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+              <i data-lucide="scale" class="w-3.5 h-3.5 text-purple-500"></i> Portion anpassen
+            </span>
+            <span class="text-[9px] bg-purple-100 text-purple-700 font-black px-2 py-0.5 rounded-full">LIVE RECHNER</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Referenz / Basis</label>
+              <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 mt-1">
+                <input type="number" id="res-ref-weight" class="w-full outline-none font-bold text-sm text-gray-700 bg-transparent" value="100" oninput="scaleNutrients()">
+                <span class="text-xs font-bold text-gray-400">g</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Deine Menge</label>
+              <div class="flex items-center gap-1 bg-white border border-purple-200 focus-within:border-purple-500 rounded-xl px-2.5 py-1.5 mt-1 transition-colors">
+                <input type="number" id="res-your-weight" class="w-full outline-none font-black text-sm text-purple-700 bg-transparent" value="100" oninput="scaleNutrients()">
+                <span class="text-xs font-bold text-purple-400">g</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50 relative">
+            <label class="text-[10px] font-bold text-emerald-600/70 uppercase">Kalorien</label>
+            <input type="number" id="res-cal" oninput="updateBaseFromInputs()" class="w-full outline-none font-black text-2xl bg-transparent text-emerald-900 mt-1" placeholder="0">
+          </div>
+          <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Protein (g)</label>
+            <input type="number" id="res-pro" oninput="updateBaseFromInputs()" class="w-full outline-none font-bold text-xl bg-transparent text-gray-700 mt-1" placeholder="0">
+          </div>
+          <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Kohlenh. (g)</label>
+            <input type="number" id="res-carbs" oninput="updateBaseFromInputs()" class="w-full outline-none font-bold text-xl bg-transparent text-gray-700 mt-1" placeholder="0">
+          </div>
+          <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase">Fett (g)</label>
+            <input type="number" id="res-fat" oninput="updateBaseFromInputs()" class="w-full outline-none font-bold text-xl bg-transparent text-gray-700 mt-1" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <label id="save-fav-container" class="flex items-center gap-3 mt-6 mb-6 cursor-pointer bg-gray-50 p-3 rounded-xl border border-gray-100">
+        <input type="checkbox" id="res-save-fav" class="w-5 h-5 text-emerald-500 rounded border-gray-300 focus:ring-emerald-500">
+        <span class="text-sm font-bold text-gray-700">Als Favorit speichern</span>
+      </label>
+
+      <div class="flex gap-3">
+        <button onclick="haptic(); closeResultModal();" class="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition-colors">Abbrechen</button>
+        <button onclick="haptic(); saveFinalResult();" class="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-sm active:scale-95">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Favorites List Modal -->
+  <div id="fav-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeFavorites(); }">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-xl flex flex-col max-h-[80vh]">
+      <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-3xl">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i data-lucide="star" class="w-5 h-5 text-amber-500"></i> Favoriten</h3>
+        <button onclick="haptic(); closeFavorites();" class="text-gray-400 hover:text-gray-600 p-1 bg-white rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3" id="fav-container"></div>
+    </div>
+  </div>
+
+  <!-- 5. Weight Input & History Modal -->
+  <div id="weight-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) { haptic(); closeWeightModal(); }">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl text-center max-h-[90vh] overflow-y-auto">
+      <div class="w-16 h-16 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="scale" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-xl font-black text-gray-800 mb-1">Gewicht eintragen</h3>
+      <p class="text-sm text-gray-500 font-medium mb-6" id="weight-date-label">Heute</p>
+      
+      <div class="flex items-center justify-center gap-2 mb-8 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+        <input type="number" id="weight-input" step="0.1" class="w-24 text-center border-b-2 border-purple-300 py-1 outline-none focus:border-purple-600 font-black text-4xl text-gray-800 bg-transparent transition-colors" placeholder="0.0">
+        <span class="text-xl font-bold text-gray-400">kg</span>
+      </div>
+      
+      <div class="flex gap-3 mb-6">
+        <button onclick="haptic(); closeWeightModal();" class="flex-1 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-100 transition-colors">Abbrechen</button>
+        <button onclick="haptic(); saveWeight();" class="flex-1 py-3 bg-purple-500 text-white font-bold rounded-xl hover:bg-purple-600 transition-colors shadow-sm">Speichern</button>
+      </div>
+
+      <!-- Wochenverlauf Liste im Modal -->
+      <div class="border-t border-gray-100 pt-4 text-left">
+        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Verlauf der Woche</h4>
+        <div id="weight-history-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 left-0 right-0 z-[60] flex flex-col items-center pointer-events-none space-y-2 px-4"></div>
+
+  <!-- Hidden File Input for Photo Scan -->
+  <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="processAiPhoto(event)">
+
+ <script src="script.js"></script>
+</body>
+</html>
