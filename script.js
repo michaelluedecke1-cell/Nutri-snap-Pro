@@ -1,4 +1,4 @@
- 
+  
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -1072,8 +1072,23 @@ async function fetchFoodData(barcode) {
       const name = product.product_name || "Unbekanntes Produkt";
       const kcal = product.nutriments['energy-kcal_100g'] || 0;
       
-      // Vorläufiges Pop-up, um uns das Ergebnis zu zeigen!
-      alert("Gefunden: " + name + "\nKalorien (pro 100g): " + kcal + " kcal");
+     // --- NEU: Werte direkt in dein NutriSnap-Fenster eintragen! ---
+      tempMethod = 'KI-Scanner'; 
+      editingMealId = null;
+      document.getElementById('modal-title').innerText = "Barcode-Scan";
+      document.getElementById('save-fav-container').classList.remove('hidden');
+      
+      // Deine eigene Funktion füllt alles sauber aus!
+      fillResultModal(
+        name, 
+        kcal, 
+        product.nutriments['proteins_100g'] || 0, 
+        product.nutriments['carbohydrates_100g'] || 0, 
+        product.nutriments['fat_100g'] || 0
+      );
+      
+      // Fenster öffnen
+      openModal('result-modal');
       
     } else {
       alert("Schade, dieses Produkt ist noch nicht in der Datenbank.");
