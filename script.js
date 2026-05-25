@@ -1,4 +1,5 @@
  
+  
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -1103,4 +1104,4 @@ async function fetchFoodData(barcode) {
     console.error("Datenbank-Fehler:", error);
     alert("Konnte keine Verbindung zum Internet herstellen.");
   }
-} 
+} //
