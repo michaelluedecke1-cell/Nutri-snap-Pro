@@ -1,4 +1,5 @@
   
+  
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -899,18 +900,19 @@
       
       document.getElementById('res-save-fav').checked = false;
 
+    
       // NEU: Live-Rechner ausblenden, wenn die Methode von der KI kommt
       const liveRechner = document.getElementById('live-rechner');
       if (liveRechner) {
-        if (tempMethod && tempMethod.startsWith('KI-')) {
+        // Blende den Rechner nur bei KI-Text und KI-Foto aus, aber NICHT beim Scanner!
+        if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
           liveRechner.classList.add('hidden');
         } else {
           liveRechner.classList.remove('hidden');
         }
       }
-    }
 
-    function scaleNutrients() {
+    function scaleNutrients() {}
       const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
       const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
 
