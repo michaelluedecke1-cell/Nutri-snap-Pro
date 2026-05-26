@@ -1,4 +1,5 @@
   
+  
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -884,6 +885,34 @@
       return JSON.parse(text);
     }
 
+   function scaleNutrients() {
+  const yourWeight = Number(document.getElementById('res-your-weight').value) || 0;
+  if (yourWeight <= 0) return;
+  
+  // Rechnet immer sauber von der 100g Basis runter
+  const factor = yourWeight / 100;
+  
+  document.getElementById('res-cal').value = Math.round(baseNutrients.cal * factor);
+  document.getElementById('res-pro').value = (baseNutrients.pro * factor).toFixed(1);
+  document.getElementById('res-carbs').value = (baseNutrients.carbs * factor).toFixed(1);
+  document.getElementById('res-fat').value = (baseNutrients.fat * factor).toFixed(1);
+}
+
+function updateBaseFromInputs() {
+  const yourWeight = Number(document.getElementById('res-your-weight').value) || 100;
+  const factorTo100 = yourWeight > 0 ? (100 / yourWeight) : 1;
+
+  // Speichert deine getippten Werte im Hintergrund als neue 100g-Basis ab
+  baseNutrients.cal = (Number(document.getElementById('res-cal').value) || 0) * factorTo100;
+  baseNutrients.pro = (Number(document.getElementById('res-pro').value) || 0) * factorTo100;
+  baseNutrients.carbs = (Number(document.getElementById('res-carbs').value) || 0) * factorTo100;
+  baseNutrients.fat = (Number(document.getElementById('res-fat').value) || 0) * factorTo100;
+}
+   
+   
+   
+   
+   
     // --- Results Modal & Portion Calculator Logic ---
    function fillResultModal(n, c, p, cb, f, amount = 100) {
   document.getElementById('res-name').value = n || ''; 
