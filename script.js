@@ -1,4 +1,3 @@
- 
   
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
@@ -210,87 +209,90 @@
 
     // --- UI Rendering ---
     function renderMeals() {
-      const container = document.getElementById('meals-container');
-      const emptyState = document.getElementById('empty-state');
-      const activeStr = getActiveDateStr();
-      
-      const todaysMeals = appData.meals.filter(m => m && m.timestamp && String(m.timestamp).startsWith(activeStr));
-      let totalKcalForDay = 0;
+  const container = document.getElementById('meals-container');
+  const emptyState = document.getElementById('empty-state');
+  const activeStr = getActiveDateStr();
+  
+  const todaysMeals = appData.meals.filter(m => m && m.timestamp && String(m.timestamp).startsWith(activeStr));
+  let totalKcalForDay = 0;
 
-      if (todaysMeals.length === 0) {
-        container.innerHTML = '';
-        if (emptyState) emptyState.style.display = 'block';
-        document.getElementById('diary-kcal-total').innerText = '0 kcal';
-        return;
-      }
+  if (todaysMeals.length === 0) {
+    container.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
+    document.getElementById('diary-kcal-total').innerText = '0 kcal';
+    return;
+  }
 
-      if (emptyState) emptyState.style.display = 'none';
-      container.innerHTML = '';
+  if (emptyState) emptyState.style.display = 'none';
+  container.innerHTML = '';
 
-      todaysMeals.forEach(meal => {
-        totalKcalForDay += (Number(meal.calories) || 0);
-        let timeStr = '--:--';
-        if(meal.timestamp) {
-           const timeMatch = String(meal.timestamp).match(/T(\d{2}:\d{2})/);
-           if(timeMatch) timeStr = timeMatch[1];
-        }
-
-        let iconHtml, bgClass, textClass;
-        if(meal.method === 'KI-Text') { 
-          iconHtml = '<i data-lucide="sparkles" class="w-5 h-5"></i>'; bgClass = 'bg-blue-100'; textClass = 'text-blue-600';
-        } else if(meal.method === 'KI-Foto' || meal.method === 'KI-Scanner') { 
-          iconHtml = meal.method === 'KI-Scanner' ? '<i data-lucide="scan-line" class="w-5 h-5"></i>' : '<i data-lucide="camera" class="w-5 h-5"></i>'; 
-          bgClass = 'bg-emerald-100'; textClass = 'text-emerald-600';
-        } else if(meal.method === 'Favorit') { 
-          iconHtml = '<i data-lucide="star" class="w-5 h-5"></i>'; bgClass = 'bg-amber-100'; textClass = 'text-amber-600';
-        } else {
-          iconHtml = '<i data-lucide="pen-line" class="w-5 h-5"></i>'; bgClass = 'bg-purple-100'; textClass = 'text-purple-600';
-        }
-
-        const el = document.createElement('div');
-        el.className = 'bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4 fade-in hover:shadow-md transition-shadow';
-        
-        el.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl ${bgClass} ${textClass} flex items-center justify-center shrink-0">
-                ${iconHtml}
-              </div>
-              <div>
-                <div class="font-black text-gray-800 text-lg leading-tight">${meal.name || 'Mahlzeit'}</div>
-                <div class="text-xs font-bold text-gray-400 flex items-center gap-1 mt-1">
-                  <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${timeStr} Uhr
-                </div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="font-black text-emerald-500 text-xl">${meal.calories || 0}</div>
-              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kcal</div>
-            </div>
-          </div>
-          
-          <div class="flex justify-between items-center bg-gray-50 p-3 rounded-2xl border border-gray-100">
-             <div class="flex gap-5 text-sm font-medium text-gray-500">
-               <div><span class="font-bold text-gray-800">C:</span> ${meal.carbs || 0}g</div>
-               <div><span class="font-bold text-gray-800">P:</span> ${meal.protein || 0}g</div>
-               <div><span class="font-bold text-gray-800">F:</span> ${meal.fat || 0}g</div>
-             </div>
-             <div class="flex gap-1">
-               <button onclick="haptic(); editMeal(${meal.id});" class="text-gray-400 hover:text-blue-500 p-2 transition-colors bg-white rounded-xl shadow-sm border border-gray-200 active:scale-95">
-                 <i data-lucide="pencil" class="w-4 h-4"></i>
-               </button>
-               <button onclick="haptic(); deleteMeal(${meal.id});" class="text-gray-400 hover:text-red-500 p-2 transition-colors bg-white rounded-xl shadow-sm border border-gray-200 active:scale-95">
-                 <i data-lucide="trash-2" class="w-4 h-4"></i>
-               </button>
-             </div>
-          </div>
-        `;
-        container.appendChild(el);
-      });
-      
-      document.getElementById('diary-kcal-total').innerText = `${Math.round(totalKcalForDay)} kcal`;
-      try { lucide.createIcons(); } catch(e){}
+  todaysMeals.forEach(meal => {
+    totalKcalForDay += (Number(meal.calories) || 0);
+    let timeStr = '--:--';
+    if(meal.timestamp) {
+       const timeMatch = String(meal.timestamp).match(/T(\d{2}:\d{2})/);
+       if(timeMatch) timeStr = timeMatch[1];
     }
+
+    let iconHtml, bgClass, textClass;
+    if(meal.method === 'KI-Text') { 
+      iconHtml = '<i data-lucide="sparkles" class="w-5 h-5"></i>'; bgClass = 'bg-blue-100'; textClass = 'text-blue-600';
+    } else if(meal.method === 'KI-Foto' || meal.method === 'KI-Scanner') { 
+      iconHtml = meal.method === 'KI-Scanner' ? '<i data-lucide="scan-line" class="w-5 h-5"></i>' : '<i data-lucide="camera" class="w-5 h-5"></i>'; 
+      bgClass = 'bg-emerald-100'; textClass = 'text-emerald-600';
+    } else if(meal.method === 'Favorit') { 
+      iconHtml = '<i data-lucide="star" class="w-5 h-5"></i>'; bgClass = 'bg-amber-100'; textClass = 'text-amber-600';
+    } else {
+      iconHtml = '<i data-lucide="pen-line" class="w-5 h-5"></i>'; bgClass = 'bg-purple-100'; textClass = 'text-purple-600';
+    }
+
+    const el = document.createElement('div');
+    el.className = 'bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4 fade-in hover:shadow-md transition-shadow';
+    
+    // Zeigt die Grammzahl an, wenn sie existiert und nicht genau 100g entspricht
+    const amountDisplay = meal.amount && meal.amount !== 100 ? ` &bull; ${meal.amount}g` : '';
+
+    el.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl ${bgClass} ${textClass} flex items-center justify-center shrink-0">
+            ${iconHtml}
+          </div>
+          <div>
+            <div class="font-black text-gray-800 text-lg leading-tight">${meal.name || 'Mahlzeit'}</div>
+            <div class="text-xs font-bold text-gray-400 flex items-center gap-1 mt-1">
+              <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${timeStr} Uhr <span class="text-gray-500 ml-1">${amountDisplay}</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="font-black text-emerald-500 text-xl">${meal.calories || 0}</div>
+          <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kcal</div>
+        </div>
+      </div>
+      
+      <div class="flex justify-between items-center bg-gray-50 p-3 rounded-2xl border border-gray-100">
+         <div class="flex gap-5 text-sm font-medium text-gray-500">
+           <div><span class="font-bold text-gray-800">C:</span> ${meal.carbs || 0}g</div>
+           <div><span class="font-bold text-gray-800">P:</span> ${meal.protein || 0}g</div>
+           <div><span class="font-bold text-gray-800">F:</span> ${meal.fat || 0}g</div>
+         </div>
+         <div class="flex gap-1">
+           <button onclick="haptic(); editMeal(${meal.id});" class="text-gray-400 hover:text-blue-500 p-2 transition-colors bg-white rounded-xl shadow-sm border border-gray-200 active:scale-95">
+             <i data-lucide="pencil" class="w-4 h-4"></i>
+           </button>
+           <button onclick="haptic(); deleteMeal(${meal.id});" class="text-gray-400 hover:text-red-500 p-2 transition-colors bg-white rounded-xl shadow-sm border border-gray-200 active:scale-95">
+             <i data-lucide="trash-2" class="w-4 h-4"></i>
+           </button>
+         </div>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+  
+  document.getElementById('diary-kcal-total').innerText = `${Math.round(totalKcalForDay)} kcal`;
+  try { lucide.createIcons(); } catch(e){}
+}
 
     function updateDashboard() {
       const activeStr = getActiveDateStr();
@@ -508,15 +510,16 @@
     function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); saveData(); }
     
     function editMeal(id) {
-      const meal = appData.meals.find(m => m.id === id);
-      if(!meal) return;
-      editingMealId = id;
-      tempMethod = meal.method; 
-      fillResultModal(meal.name, meal.calories, meal.protein, meal.carbs, meal.fat);
-      document.getElementById('modal-title').innerText = "Mahlzeit bearbeiten";
-      document.getElementById('save-fav-container').classList.add('hidden'); 
-      openModal('result-modal');
-    }
+  const meal = appData.meals.find(m => m.id === id);
+  if(!meal) return;
+  editingMealId = id;
+  tempMethod = meal.method; 
+  // Übergibt die gespeicherte Grammzahl (Standard: 100) an das Modal
+  fillResultModal(meal.name, meal.calories, meal.protein, meal.carbs, meal.fat, meal.amount || 100);
+  document.getElementById('modal-title').innerText = "Mahlzeit bearbeiten";
+  document.getElementById('save-fav-container').classList.add('hidden'); 
+  openModal('result-modal');
+}
 
     function updateWater(change) {
       haptic();
@@ -882,123 +885,87 @@
     }
 
     // --- Results Modal & Portion Calculator Logic ---
-    function fillResultModal(n, c, p, cb, f) {
-      document.getElementById('res-name').value = n || ''; 
-      
-      baseNutrients.cal = Number(c) || 0;
-      baseNutrients.pro = Number(p) || 0;
-      baseNutrients.carbs = Number(cb) || 0;
-      baseNutrients.fat = Number(f) || 0;
+   function fillResultModal(n, c, p, cb, f, amount = 100) {
+  document.getElementById('res-name').value = n || ''; 
 
-      document.getElementById('res-ref-weight').value = 100;
-      document.getElementById('res-your-weight').value = 100;
+  // Berechnet den Faktor zu 100g, damit die Skalierungs-Basis für den Live-Rechner stimmt
+  const factorTo100 = amount > 0 ? (100 / amount) : 1;
 
-      document.getElementById('res-cal').value = baseNutrients.cal;
-      document.getElementById('res-pro').value = baseNutrients.pro;
-      document.getElementById('res-carbs').value = baseNutrients.carbs;
-      document.getElementById('res-fat').value = baseNutrients.fat;
-      
-      document.getElementById('res-save-fav').checked = false;
+  baseNutrients.cal = (Number(c) || 0) * factorTo100;
+  baseNutrients.pro = (Number(p) || 0) * factorTo100;
+  baseNutrients.carbs = (Number(cb) || 0) * factorTo100;
+  baseNutrients.fat = (Number(f) || 0) * factorTo100;
 
-    
-      // NEU: Live-Rechner ausblenden, wenn die Methode von der KI kommt
-      const liveRechner = document.getElementById('live-rechner');
-      if (liveRechner) {
-        // Blende den Rechner nur bei KI-Text und KI-Foto aus, aber NICHT beim Scanner!
-        if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
-          liveRechner.classList.add('hidden');
-        } else {
-          liveRechner.classList.remove('hidden');
-        }
-      }
+  document.getElementById('res-ref-weight').value = 100;
+  document.getElementById('res-your-weight').value = amount;
 
-     
+  document.getElementById('res-cal').value = Number(c) || 0;
+  document.getElementById('res-pro').value = Number(p) || 0;
+  document.getElementById('res-carbs').value = Number(cb) || 0;
+  document.getElementById('res-fat').value = Number(f) || 0;
+  
+  document.getElementById('res-save-fav').checked = false;
+
+  // Blende den Live-Rechner bei KI-Text und KI-Foto aus
+  const liveRechner = document.getElementById('live-rechner');
+  if (liveRechner) {
+    if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
+      liveRechner.classList.add('hidden');
+    } else {
+      liveRechner.classList.remove('hidden');
     }
-function scaleNutrients() {
-  // 1. Werte aus den Feldern holen
-  const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
-  const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
-
-  if (refW <= 0) return;
-
-  // 2. Faktor berechnen
-  const factor = yourW / refW;
-
-  // 3. Werte basierend auf den gespeicherten baseNutrients skalieren
-  const scaledCal = Math.round(baseNutrients.cal * factor);
-  const scaledPro = parseFloat((baseNutrients.pro * factor).toFixed(1));
-  const scaledCarbs = parseFloat((baseNutrients.carbs * factor).toFixed(1));
-  const scaledFat = parseFloat((baseNutrients.fat * factor).toFixed(1));
-
-  // 4. In die Eingabefelder zurückschreiben
-  document.getElementById('res-cal').value = scaledCal;
-  document.getElementById('res-pro').value = scaledPro;
-  document.getElementById('res-carbs').value = scaledCarbs;
-  document.getElementById('res-fat').value = scaledFat;
+  }
 }
-    function updateBaseFromInputs() {
-      const refW = parseFloat(document.getElementById('res-ref-weight').value) || 100;
-      const yourW = parseFloat(document.getElementById('res-your-weight').value) || 100;
+
+function saveFinalResult() {
+  try {
+    const n = document.getElementById('res-name').value.trim() || 'Mahlzeit';
+    const c = Number(document.getElementById('res-cal').value) || 0;
+    const p = Number(document.getElementById('res-pro').value) || 0;
+    const cb = Number(document.getElementById('res-carbs').value) || 0;
+    const f = Number(document.getElementById('res-fat').value) || 0;
+    // Liest die Grammzahl aus dem Rechner aus
+    const amount = Number(document.getElementById('res-your-weight').value) || 100;
+    const fav = document.getElementById('res-save-fav').checked;
+
+    if (!Array.isArray(appData.meals)) appData.meals = [];
+
+    if (editingMealId) {
+      const index = appData.meals.findIndex(m => m.id === editingMealId);
+      if (index !== -1) {
+        appData.meals[index] = { ...appData.meals[index], name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount };
+      }
+    } else {
+      const datePrefix = getActiveDateStr();
+      const timeNow = new Date().toTimeString().split(' ')[0];
+      const ts = `${datePrefix}T${timeNow}.000Z`;
       
-      if (yourW <= 0) return;
-      
-      const reverseFactor = refW / yourW;
-      
-      baseNutrients.cal = (parseFloat(document.getElementById('res-cal').value) || 0) * reverseFactor;
-      baseNutrients.pro = (parseFloat(document.getElementById('res-pro').value) || 0) * reverseFactor;
-      baseNutrients.carbs = (parseFloat(document.getElementById('res-carbs').value) || 0) * reverseFactor;
-      baseNutrients.fat = (parseFloat(document.getElementById('res-fat').value) || 0) * reverseFactor;
+      appData.meals.unshift({ id: Date.now(), name: n, calories: c, protein: p, carbs: cb, fat: f, timestamp: ts, method: tempMethod, amount: amount });
     }
-    
-    function closeResultModal() { forceCloseAllModals(); editingMealId = null; }
 
-    function saveFinalResult() {
-      try {
-        const n = document.getElementById('res-name').value.trim() || 'Mahlzeit';
-        const c = Number(document.getElementById('res-cal').value) || 0;
-        const p = Number(document.getElementById('res-pro').value) || 0;
-        const cb = Number(document.getElementById('res-carbs').value) || 0;
-        const f = Number(document.getElementById('res-fat').value) || 0;
-        const fav = document.getElementById('res-save-fav').checked;
-
-        if (!Array.isArray(appData.meals)) appData.meals = [];
-
-        if (editingMealId) {
-          const index = appData.meals.findIndex(m => m.id === editingMealId);
-          if (index !== -1) {
-            appData.meals[index] = { ...appData.meals[index], name: n, calories: c, protein: p, carbs: cb, fat: f };
-          }
-        } else {
-          const datePrefix = getActiveDateStr();
-          const timeNow = new Date().toTimeString().split(' ')[0];
-          const ts = `${datePrefix}T${timeNow}.000Z`;
-          
-          appData.meals.unshift({ id: Date.now(), name: n, calories: c, protein: p, carbs: cb, fat: f, timestamp: ts, method: tempMethod });
-        }
-
-        if (!editingMealId && fav) {
-          if (!Array.isArray(appData.favorites)) appData.favorites = [];
-          const isAlreadyFav = appData.favorites.some(x => {
-            if(!x.name) return false;
-            return String(x.name).toLowerCase() === String(n).toLowerCase();
-          });
-          if(!isAlreadyFav) {
-             appData.favorites.push({ id: Date.now()+1, name: n, calories: c, protein: p, carbs: cb, fat: f });
-          }
-        }
-
-        saveData(); 
-        switchTab('diary');
-        showNotification('success', `Eintrag gespeichert!`);
-
-      } catch(err) {
-        console.error("Kritischer Fehler beim Speichern:", err);
-        showNotification('error', 'Fehler: ' + err.message);
-      } finally {
-        forceCloseAllModals();
-        editingMealId = null;
+    if (!editingMealId && fav) {
+      if (!Array.isArray(appData.favorites)) appData.favorites = [];
+      const isAlreadyFav = appData.favorites.some(x => {
+        if(!x.name) return false;
+        return String(x.name).toLowerCase() === String(n).toLowerCase();
+      });
+      if(!isAlreadyFav) {
+         appData.favorites.push({ id: Date.now()+1, name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount });
       }
     }
+
+    saveData(); 
+    switchTab('diary');
+    showNotification('success', `Eintrag gespeichert!`);
+
+  } catch(err) {
+    console.error("Kritischer Fehler beim Speichern:", err);
+    showNotification('error', 'Fehler: ' + err.message);
+  } finally {
+    forceCloseAllModals();
+    editingMealId = null;
+  }
+}
 
     function showNotification(type, msg) {
       haptic();
