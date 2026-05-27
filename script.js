@@ -1,4 +1,4 @@
-  
+    
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -509,6 +509,14 @@
     // --- Core Operations ---
     function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); saveData(); }
     
+    function deleteFavorite(id) {
+  haptic();
+  // Filtert den gelöschten Eintrag aus dem Array heraus
+  appData.favorites = appData.favorites.filter(fav => fav.id !== id);
+  saveData();
+  openFavorites(); // Lädt das Fenster direkt neu, damit der Eintrag verschwindet
+  showNotification('success', 'Favorit gelöscht!');
+}
     function editMeal(id) {
   const meal = appData.meals.find(m => m.id === id);
   if(!meal) return;
@@ -711,37 +719,50 @@
       openModal('result-modal'); 
     }
     
-    function openFavorites() {
-      haptic();
-      const container = document.getElementById('fav-container');
-      container.innerHTML = '';
-      if (!appData.favorites || appData.favorites.length === 0) {
-        container.innerHTML = '<div class="text-center text-gray-400 py-10"><i data-lucide="star-off" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><p>Keine Favoriten gespeichert</p></div>';
-      } else {
-        appData.favorites.forEach(fav => {
-          const btn = document.createElement('button');
-          btn.className = 'w-full text-left bg-white hover:bg-orange-50 p-4 rounded-2xl flex justify-between items-center border border-gray-100 shadow-sm transition-all active:scale-[0.98]';
-          btn.innerHTML = `
-            <div>
-              <div class="font-bold text-gray-800">${fav.name || 'Ohne Name'}</div>
-              <div class="text-xs font-bold text-orange-600 mt-1">${fav.calories || 0} kcal</div>
-            </div>
-            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
-              <i data-lucide="plus" class="w-5 h-5 pointer-events-none"></i>
-            </div>
-          `;
-          btn.onclick = () => { 
-            haptic(); tempMethod = 'Favorit'; editingMealId = null;
-            document.getElementById('modal-title').innerText = "Aus Favoriten";
-            document.getElementById('save-fav-container').classList.remove('hidden');
-            fillResultModal(fav.name || 'Mahlzeit', fav.calories, fav.protein, fav.carbs, fav.fat); 
-            closeFavorites(); openModal('result-modal'); 
-          };
-          container.appendChild(btn);
-        });
-      }
-      lucide.createIcons(); openModal('fav-modal');
-    }
+   function openFavorites() {
+  haptic();
+  const container = document.getElementById('fav-container');
+  container.innerHTML = '';
+  
+  if (!appData.favorites || appData.favorites.length === 0) {
+    container.innerHTML = '<div class="text-center text-gray-400 py-10"><i data-lucide="star-off" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><p>Keine Favoriten gespeichert</p></div>';
+  } else {
+    appData.favorites.forEach(fav => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'w-full bg-white p-3 rounded-2xl flex justify-between items-center border border-gray-100 shadow-sm transition-all';
+      
+      itemEl.innerHTML = `
+        <div class="flex-1 cursor-pointer active:scale-[0.98]" id="load-fav-${fav.id}">
+          <div class="font-bold text-gray-800">${fav.name || 'Ohne Name'}</div>
+          <div class="text-xs font-bold text-orange-600 mt-1">${fav.calories || 0} kcal</div>
+        </div>
+        <div class="flex items-center gap-1 ml-2">
+          <button onclick="deleteFavorite(${fav.id})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-95">
+            <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
+          </button>
+          <button id="add-fav-${fav.id}" class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 hover:bg-orange-200 transition-colors active:scale-95">
+            <i data-lucide="plus" class="w-5 h-5 pointer-events-none"></i>
+          </button>
+        </div>
+      `;
+      
+      // Klick-Logik zum Hinzufügen (für Text und Plus-Button)
+      const loadAction = () => { 
+        haptic(); tempMethod = 'Favorit'; editingMealId = null;
+        document.getElementById('modal-title').innerText = "Aus Favoriten";
+        document.getElementById('save-fav-container').classList.remove('hidden');
+        fillResultModal(fav.name || 'Mahlzeit', fav.calories, fav.protein, fav.carbs, fav.fat); 
+        closeFavorites(); openModal('result-modal'); 
+      };
+      
+      itemEl.querySelector(`#load-fav-${fav.id}`).onclick = loadAction;
+      itemEl.querySelector(`#add-fav-${fav.id}`).onclick = loadAction;
+      
+      container.appendChild(itemEl);
+    });
+  }
+  lucide.createIcons(); openModal('fav-modal');
+}
     
     function closeFavorites() { forceCloseAllModals(); }
 
