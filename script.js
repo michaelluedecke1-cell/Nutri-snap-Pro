@@ -1,5 +1,4 @@
   
-  
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -944,6 +943,11 @@ function updateBaseFromInputs() {
       liveRechner.classList.remove('hidden');
     }
   }
+}
+
+function closeResultModal() {
+  forceCloseAllModals();
+  editingMealId = null; // Setzt die temporäre ID zurück, falls man vorher im Bearbeiten-Modus war
 }
 
 function saveFinalResult() {
