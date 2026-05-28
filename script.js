@@ -1,4 +1,3 @@
-    
    
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
@@ -929,8 +928,10 @@
       });
 
       if (!response.ok) {
-        throw new Error('API Anfrage fehlgeschlagen');
+        const errData = await response.json();
+        throw new Error(errData.error?.message || 'API Fehler');
       }
+       
 
       const data = await response.json();
       let text = data.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
