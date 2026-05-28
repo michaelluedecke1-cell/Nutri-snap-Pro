@@ -1,4 +1,5 @@
     
+   
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -842,7 +843,7 @@
       try { lucide.createIcons(); } catch(e){}
 
       try {
-        const res = await callGeminiAPI("Schätze die Nährwerte für folgendes: " + input, null);
+        const res = await callGroqAPI("Schätze die Nährwerte für folgendes: " + input, null);
         tempMethod = 'KI-Text'; editingMealId = null;
         document.getElementById('modal-title').innerText = "KI Erkennung";
         document.getElementById('save-fav-container').classList.remove('hidden');
@@ -867,7 +868,7 @@
             prompt = "Lies die Nährwerttabelle auf diesem Bild. Extrahiere die Kalorien (kcal), Protein (Eiweiß), Kohlenhydrate und Fett. Wenn Werte 'pro Portion' angegeben sind, nimm diese. Ansonsten nimm die 'pro 100g' Werte. Als foodName setze 'Gescannter Artikel'.";
         }
 
-        const res = await callGeminiAPI(prompt, b64);
+        const res = await callGroqAPI(prompt, b64);
         tempMethod = isLabel ? 'KI-Scanner' : 'KI-Foto'; 
         editingMealId = null;
         document.getElementById('modal-title').innerText = isLabel ? "Tabellen-Scan" : "KI Foto-Scan";
@@ -889,19 +890,50 @@
       });
     }
 
-    async function callGeminiAPI(prompt, base64Image) {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${appData.apiKey}`;
+    async function callGroqAPI(prompt, base64Image) {
+      const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
       const sysInst = `Ernährungs-Experte. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). Die Keys MÜSSEN heißen: foodName (String), calories (Number), protein (Number), carbs (Number), fat (Number).`;
-      let contents = [{ role: "user", parts: [{ text: prompt }] }];
-      if (base64Image) contents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
+      
+      const model = base64Image ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
+      
+      let messages = [
+        { role: "system", content: sysInst }
+      ];
+
+      if (base64Image) {
+        messages.push({
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
+          ]
+        });
+      } else {
+        messages.push({
+          role: "user",
+          content: prompt
+        });
+      }
 
       const response = await fetch(endpoint, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system_instruction: { parts: [{ text: sysInst }] }, contents: contents, generationConfig: { temperature: 0.1 } })
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${appData.apiKey}` 
+        },
+        body: JSON.stringify({ 
+          model: model,
+          messages: messages, 
+          temperature: 0.1 
+        })
       });
-      if (!response.ok) throw new Error('API Anfrage fehlgeschlagen');
+
+      if (!response.ok) {
+        throw new Error('API Anfrage fehlgeschlagen');
+      }
+
       const data = await response.json();
-      let text = data.candidates[0].content.parts[0].text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      let text = data.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
       return JSON.parse(text);
     }
 
