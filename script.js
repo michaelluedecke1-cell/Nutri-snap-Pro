@@ -1,4 +1,5 @@
    
+   
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -893,7 +894,7 @@
       const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
       const sysInst = `Ernährungs-Experte. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). Die Keys MÜSSEN heißen: foodName (String), calories (Number), protein (Number), carbs (Number), fat (Number).`;
       
-      const model = base64Image ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
+      const model = base64Image ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
       
       let messages = [
         { role: "system", content: sysInst }
