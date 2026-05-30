@@ -1,5 +1,4 @@
-   
-   
+     
     // --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -60,8 +59,22 @@
     let touchstartX = 0;
     let touchstartY = 0;
 
-    // --- Initialization & Sicherheits-Checks ---
+   // --- Initialization & Sicherheits-Checks ---
+    async function requestPersistentStorage() {
+      if (navigator.storage && navigator.storage.persist) {
+        const isPersisted = await navigator.storage.persisted();
+        console.log(`Speicher bereits dauerhaft? ${isPersisted ? 'Ja' : 'Nein'}`);
+        
+        if (!isPersisted) {
+          const persisted = await navigator.storage.persist();
+          console.log(`Dauerhafter Speicher genehmigt? ${persisted ? 'Ja' : 'Nein'}`);
+        }
+      }
+    }
+
     function init() {
+      requestPersistentStorage();
+
       try {
         const savedData = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('nutrisnap_data_v7');
         if(savedData) {
