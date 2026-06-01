@@ -40,7 +40,7 @@
       favorites: [],
       water: {},
       weights: {},
-      dailyGoals: {}, // Speichert das Kalorienziel tagesaktuell
+      dailyGoals: {}, 
       lastActiveDate: null,
       streak: 0
     };
@@ -460,7 +460,7 @@
 
           const mealsForDay = appData.meals.filter(m => m && m.timestamp && String(m.timestamp).startsWith(dateStr));
           const cals = mealsForDay.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-          const dayGoal = getGoalForDate(dateStr); // Spezifisches Ziel für diesen Tag abrufen
+          const dayGoal = getGoalForDate(dateStr); 
 
           const dayName = daysArr[d.getDay()];
           const isToday = i === 0;
@@ -539,7 +539,7 @@
   // Filtert den gelöschten Eintrag aus dem Array heraus
   appData.favorites = appData.favorites.filter(fav => fav.id !== id);
   saveData();
-  openFavorites(); // Lädt das Fenster direkt neu, damit der Eintrag verschwindet
+  openFavorites(); 
   showNotification('success', 'Favorit gelöscht!');
 }
     function editMeal(id) {
@@ -547,7 +547,6 @@
   if(!meal) return;
   editingMealId = id;
   tempMethod = meal.method; 
-  // Übergibt die gespeicherte Grammzahl (Standard: 100) an das Modal
   fillResultModal(meal.name, meal.calories, meal.protein, meal.carbs, meal.fat, meal.amount || 100);
   document.getElementById('modal-title').innerText = "Mahlzeit bearbeiten";
   document.getElementById('save-fav-container').classList.add('hidden'); 
@@ -668,7 +667,6 @@
         document.getElementById('goal-kcal-input').value = calcFinalResult;
         appData.goalKcal = calcFinalResult;
         
-        // Aktualisiert das Ziel für den aktiven Tag
         const activeStr = getActiveDateStr();
         if(!appData.dailyGoals) appData.dailyGoals = {};
         appData.dailyGoals[activeStr] = calcFinalResult;
@@ -680,7 +678,6 @@
     // --- Settings ---
     function populateSettingsForm() {
       document.getElementById('api-key-input').value = appData.apiKey || '';
-      // Zeige im Input das Ziel des aktuell ausgewählten Tages an
       const activeStr = getActiveDateStr();
       document.getElementById('goal-kcal-input').value = getGoalForDate(activeStr);
       document.getElementById('goal-water-input').value = appData.goalWater;
@@ -706,7 +703,6 @@
       appData.goalWater = Number(document.getElementById('goal-water-input').value) || 8;
       appData.macroSplit = { c: mc, p: mp, f: mf };
       
-      // Speichere das Ziel für den aktuell in der App ausgewählten Tag
       const activeStr = getActiveDateStr();
       if(!appData.dailyGoals) appData.dailyGoals = {};
       appData.dailyGoals[activeStr] = appData.goalKcal;
@@ -784,7 +780,6 @@
         </div>
       `;
       
-      // Klick-Logik zum Hinzufügen (für Text und Plus-Button)
       const loadAction = () => { 
         haptic(); tempMethod = 'Favorit'; editingMealId = null;
         document.getElementById('modal-title').innerText = "Aus Favoriten";
@@ -898,8 +893,7 @@
       try {
         const b64 = await convertFileToBase64(file);
         
-        // HIER IST DER VERBESSERTE PROMPT FÜR EINE GENAUERE ERKENNUNG VON PORTIONEN (wie kleine Datteln)
-        let prompt = "Schätze die Nährwerte für das Essen auf diesem Bild ab. Achte zwingend auf die Portionsgröße und zähle die sichtbaren Elemente (z.B. 3 kleine Datteln). Berechne die Werte NUR für die tatsächlich sichtbare Menge, NICHT pauschal für 100g. Gehe im Zweifel eher von durchschnittlichen oder kleinen Größen aus, es sei denn, es ist offensichtlich ein riesiges Stück.";
+        let prompt = "Schätze die Nährwerte für das Essen auf diesem Bild ab. Achte zwingend auf die Portionsgröße und zähle die sichtbaren Elemente. Berechne die Werte NUR für die tatsächlich sichtbare Menge. Gehe im Zweifel eher von durchschnittlichen oder kleinen Größen aus. Achte darauf, dass die Kalorien mathematisch exakt zu den Makros passen.";
         
         if (isLabel) {
             prompt = "Lies die Nährwerttabelle auf diesem Bild. Extrahiere die Kalorien (kcal), Protein (Eiweiß), Kohlenhydrate und Fett. Wenn Werte 'pro Portion' angegeben sind, nimm diese. Ansonsten nimm die 'pro 100g' Werte. Als foodName setze 'Gescannter Artikel'.";
@@ -929,7 +923,12 @@
 
     async function callGroqAPI(prompt, base64Image) {
       const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
-      const sysInst = `Ernährungs-Experte. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). Die Keys MÜSSEN heißen: foodName (String), calories (Number), protein (Number), carbs (Number), fat (Number).`;
+      const sysInst = `Du bist ein hochpräziser Ernährungs-Experte. 
+Regeln:
+1. Achte streng auf die Nährwert-Mathematik (1g Kohlenhydrate = 4 kcal, 1g Protein = 4 kcal, 1g Fett = 9 kcal). Die berechnete Summe der Makros MUSS exakt zu den Gesamtkalorien passen.
+2. Gehe bei allgemeinen Angaben ohne Mengennennung von realistischen Durchschnittsportionen aus (z.B. Apfel = 150g, Brötchen = 70g).
+3. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
+4. Die Keys MÜSSEN exakt so heißen: foodName (String), calories (Number), protein (Number), carbs (Number), fat (Number).`;
       
       const model = base64Image ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
       
@@ -980,7 +979,6 @@
   const yourWeight = Number(document.getElementById('res-your-weight').value) || 0;
   if (yourWeight <= 0) return;
   
-  // Rechnet immer sauber von der 100g Basis runter
   const factor = yourWeight / 100;
   
   document.getElementById('res-cal').value = Math.round(baseNutrients.cal * factor);
@@ -993,22 +991,16 @@ function updateBaseFromInputs() {
   const yourWeight = Number(document.getElementById('res-your-weight').value) || 100;
   const factorTo100 = yourWeight > 0 ? (100 / yourWeight) : 1;
 
-  // Speichert deine getippten Werte im Hintergrund als neue 100g-Basis ab
   baseNutrients.cal = (Number(document.getElementById('res-cal').value) || 0) * factorTo100;
   baseNutrients.pro = (Number(document.getElementById('res-pro').value) || 0) * factorTo100;
   baseNutrients.carbs = (Number(document.getElementById('res-carbs').value) || 0) * factorTo100;
   baseNutrients.fat = (Number(document.getElementById('res-fat').value) || 0) * factorTo100;
 }
    
-   
-   
-   
-   
     // --- Results Modal & Portion Calculator Logic ---
    function fillResultModal(n, c, p, cb, f, amount = 100) {
   document.getElementById('res-name').value = n || ''; 
 
-  // Berechnet den Faktor zu 100g, damit die Skalierungs-Basis für den Live-Rechner stimmt
   const factorTo100 = amount > 0 ? (100 / amount) : 1;
 
   baseNutrients.cal = (Number(c) || 0) * factorTo100;
@@ -1026,7 +1018,6 @@ function updateBaseFromInputs() {
   
   document.getElementById('res-save-fav').checked = false;
 
-  // Blende den Live-Rechner bei KI-Text und KI-Foto aus
   const liveRechner = document.getElementById('live-rechner');
   if (liveRechner) {
     if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
@@ -1039,7 +1030,7 @@ function updateBaseFromInputs() {
 
 function closeResultModal() {
   forceCloseAllModals();
-  editingMealId = null; // Setzt die temporäre ID zurück, falls man vorher im Bearbeiten-Modus war
+  editingMealId = null; 
 }
 
 function saveFinalResult() {
@@ -1049,7 +1040,6 @@ function saveFinalResult() {
     const p = Number(document.getElementById('res-pro').value) || 0;
     const cb = Number(document.getElementById('res-carbs').value) || 0;
     const f = Number(document.getElementById('res-fat').value) || 0;
-    // Liest die Grammzahl aus dem Rechner aus
     const amount = Number(document.getElementById('res-your-weight').value) || 100;
     const fav = document.getElementById('res-save-fav').checked;
 
@@ -1115,24 +1105,20 @@ function openScanner() {
   haptic();
   openModal('scanner-modal');
 
-  // Scanner vorbereiten
   if (!html5QrCode) {
     html5QrCode = new Html5Qrcode("reader");
   }
 
-  // Kamera starten
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: { width: 250, height: 150 } },
     (decodedText) => {
       haptic();
-      closeScanner(); // Scanner-Fenster schließen
+      closeScanner(); 
       
-      // HIER IST DIE MAGIE: Wir schicken den erkannten Code direkt ans Internet!
       fetchFoodData(decodedText); 
     },
     (errorMessage) => { 
-      // Ignorieren wir, passiert wenn gerade kein Barcode im Bild ist
     }
   ).then(() => {
     const loadingEl = document.getElementById('scanner-loading');
@@ -1154,30 +1140,25 @@ function closeScanner() {
     html5QrCode.stop();
   }
 }
-  // --- Nährwerte aus dem Internet abrufen ---
+
 async function fetchFoodData(barcode) {
   console.log("Suche im Internet nach Barcode: " + barcode);
   
   try {
-    // Wir fragen die kostenlose Open Food Facts Datenbank ab
     const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
     const data = await response.json();
 
-    // Prüfen, ob das Produkt gefunden wurde (Status 1 bedeutet gefunden)
     if (data.status === 1) {
       const product = data.product;
       
-      // Wir holen uns den Namen und die Kalorien (pro 100g)
       const name = product.product_name || "Unbekanntes Produkt";
       const kcal = product.nutriments['energy-kcal_100g'] || 0;
       
-     // --- NEU: Werte direkt in dein NutriSnap-Fenster eintragen! ---
       tempMethod = 'KI-Scanner'; 
       editingMealId = null;
       document.getElementById('modal-title').innerText = "Barcode-Scan";
       document.getElementById('save-fav-container').classList.remove('hidden');
       
-      // Deine eigene Funktion füllt alles sauber aus!
       fillResultModal(
         name, 
         kcal, 
@@ -1186,7 +1167,6 @@ async function fetchFoodData(barcode) {
         product.nutriments['fat_100g'] || 0
       );
       
-      // Fenster öffnen
       openModal('result-modal');
       
     } else {
