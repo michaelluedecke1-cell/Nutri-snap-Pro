@@ -1,5 +1,4 @@
-     
-    // --- Service Worker & PWA ---
+// --- Service Worker & PWA ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
@@ -41,6 +40,7 @@
       favorites: [],
       water: {},
       weights: {},
+      dailyGoals: {}, // Speichert das Kalorienziel tagesaktuell
       lastActiveDate: null,
       streak: 0
     };
@@ -88,6 +88,7 @@
       if (!Array.isArray(appData.favorites)) appData.favorites = [];
       if (!appData.water || typeof appData.water !== 'object') appData.water = {};
       if (!appData.weights || typeof appData.weights !== 'object') appData.weights = {};
+      if (!appData.dailyGoals || typeof appData.dailyGoals !== 'object') appData.dailyGoals = {};
       if (!appData.goalKcal || isNaN(appData.goalKcal)) appData.goalKcal = 2000;
       if (!appData.goalWater || isNaN(appData.goalWater)) appData.goalWater = 8;
       
@@ -99,6 +100,14 @@
       populateSettingsForm();
       initSpeechRecognition();
       setupSwipeGestures();
+    }
+
+    // --- Helper für Tagesziel ---
+    function getGoalForDate(dateStr) {
+      if (appData.dailyGoals && appData.dailyGoals[dateStr]) {
+        return Number(appData.dailyGoals[dateStr]);
+      }
+      return Number(appData.goalKcal) || 2000;
     }
 
     // --- Streaks ---
@@ -311,6 +320,7 @@
     function updateDashboard() {
       const activeStr = getActiveDateStr();
       const todaysMeals = appData.meals.filter(m => m && m.timestamp && String(m.timestamp).startsWith(activeStr));
+      const currentGoalKcal = getGoalForDate(activeStr);
       
       const t = todaysMeals.reduce((acc, meal) => {
         acc.cal += (Number(meal.calories) || 0); 
@@ -321,9 +331,9 @@
       }, { cal: 0, pro: 0, carbs: 0, fat: 0 });
 
       document.getElementById('total-calories').innerText = Math.round(t.cal);
-      document.getElementById('goal-calories-display').innerText = appData.goalKcal;
+      document.getElementById('goal-calories-display').innerText = currentGoalKcal;
       
-      let remaining = appData.goalKcal - Math.round(t.cal);
+      let remaining = currentGoalKcal - Math.round(t.cal);
       const remEl = document.getElementById('remaining-calories');
       remEl.innerText = remaining;
       remEl.className = remaining >= 0 ? "text-3xl font-black text-emerald-500 transition-colors" : "text-3xl font-black text-red-500 transition-colors";
@@ -332,7 +342,7 @@
       document.getElementById('total-protein').innerText = Math.round(t.pro) + 'g';
       document.getElementById('total-fat').innerText = Math.round(t.fat) + 'g';
 
-      const calPercent = Math.min(100, (t.cal / appData.goalKcal) * 100);
+      const calPercent = Math.min(100, (t.cal / currentGoalKcal) * 100);
       document.getElementById('cal-progress').style.width = `${calPercent}%`;
       document.getElementById('cal-progress').className = `h-full progress-bar ${calPercent >= 100 ? 'bg-red-500' : 'bg-emerald-500'}`;
 
@@ -341,9 +351,9 @@
       const pPercentage = split.p !== undefined ? Number(split.p) : 30;
       const fPercentage = split.f !== undefined ? Number(split.f) : 30;
 
-      const carbsGoal = Math.round((appData.goalKcal * (cPercentage / 100)) / 4);
-      const proGoal = Math.round((appData.goalKcal * (pPercentage / 100)) / 4);
-      const fatGoal = Math.round((appData.goalKcal * (fPercentage / 100)) / 9);
+      const carbsGoal = Math.round((currentGoalKcal * (cPercentage / 100)) / 4);
+      const proGoal = Math.round((currentGoalKcal * (pPercentage / 100)) / 4);
+      const fatGoal = Math.round((currentGoalKcal * (fPercentage / 100)) / 9);
 
       document.getElementById('goal-carbs-text').innerText = `Ziel: ${carbsGoal}g`;
       document.getElementById('goal-pro-text').innerText = `Ziel: ${proGoal}g`;
@@ -450,10 +460,11 @@
 
           const mealsForDay = appData.meals.filter(m => m && m.timestamp && String(m.timestamp).startsWith(dateStr));
           const cals = mealsForDay.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+          const dayGoal = getGoalForDate(dateStr); // Spezifisches Ziel für diesen Tag abrufen
 
           const dayName = daysArr[d.getDay()];
           const isToday = i === 0;
-          const heightPct = appData.goalKcal > 0 ? Math.min(100, (cals / appData.goalKcal) * 100) : 0;
+          const heightPct = dayGoal > 0 ? Math.min(100, (cals / dayGoal) * 100) : 0;
           const colorClass = heightPct >= 100 ? 'bg-red-400' : (isToday ? 'bg-emerald-500' : 'bg-emerald-300');
 
           container.innerHTML += `
@@ -656,6 +667,12 @@
       if (calcFinalResult > 0) {
         document.getElementById('goal-kcal-input').value = calcFinalResult;
         appData.goalKcal = calcFinalResult;
+        
+        // Aktualisiert das Ziel für den aktiven Tag
+        const activeStr = getActiveDateStr();
+        if(!appData.dailyGoals) appData.dailyGoals = {};
+        appData.dailyGoals[activeStr] = calcFinalResult;
+
         saveData(); closeCalcModal(); showNotification('success', 'Tagesziel wurde aktualisiert!');
       } else { showNotification('error', 'Bitte fülle Alter, Größe & Gewicht aus.'); }
     }
@@ -663,7 +680,9 @@
     // --- Settings ---
     function populateSettingsForm() {
       document.getElementById('api-key-input').value = appData.apiKey || '';
-      document.getElementById('goal-kcal-input').value = appData.goalKcal;
+      // Zeige im Input das Ziel des aktuell ausgewählten Tages an
+      const activeStr = getActiveDateStr();
+      document.getElementById('goal-kcal-input').value = getGoalForDate(activeStr);
       document.getElementById('goal-water-input').value = appData.goalWater;
       document.getElementById('macro-c').value = appData.macroSplit.c;
       document.getElementById('macro-p').value = appData.macroSplit.p;
@@ -687,6 +706,11 @@
       appData.goalWater = Number(document.getElementById('goal-water-input').value) || 8;
       appData.macroSplit = { c: mc, p: mp, f: mf };
       
+      // Speichere das Ziel für den aktuell in der App ausgewählten Tag
+      const activeStr = getActiveDateStr();
+      if(!appData.dailyGoals) appData.dailyGoals = {};
+      appData.dailyGoals[activeStr] = appData.goalKcal;
+
       saveData(); showNotification('success', 'Einstellungen gesichert');
     }
 
@@ -1172,4 +1196,4 @@ async function fetchFoodData(barcode) {
     console.error("Datenbank-Fehler:", error);
     alert("Konnte keine Verbindung zum Internet herstellen.");
   }
-} //
+}
