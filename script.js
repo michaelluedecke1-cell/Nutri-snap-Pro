@@ -272,7 +272,6 @@
     const el = document.createElement('div');
     el.className = 'bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4 fade-in hover:shadow-md transition-shadow';
     
-    // Zeigt die Grammzahl an, wenn sie existiert und nicht genau 100g entspricht
     const amountDisplay = meal.amount && meal.amount !== 100 ? ` &bull; ${meal.amount}g` : '';
 
     el.innerHTML = `
@@ -397,7 +396,6 @@
       const todayWeight = appData.weights[activeStr];
       document.getElementById('weight-display').innerText = todayWeight ? Number(todayWeight).toFixed(1) : '--';
 
-      // Wöchentlichen Durchschnitt berechnen und anzeigen
       let totalW = 0;
       let countW = 0;
       const today = new Date();
@@ -418,7 +416,6 @@
       renderWeeklyChart();
     }
 
-    // Chart Mode Toggle Handler
     function setChartMode(mode) {
       haptic();
       chartMode = mode;
@@ -531,12 +528,11 @@
         });
       }
     }
-    // --- Core Operations ---
+
     function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); saveData(); }
     
     function deleteFavorite(id) {
   haptic();
-  // Filtert den gelöschten Eintrag aus dem Array heraus
   appData.favorites = appData.favorites.filter(fav => fav.id !== id);
   saveData();
   openFavorites(); 
@@ -631,7 +627,6 @@
       showNotification('success', 'Gewicht gespeichert!');
     }
 
-    // --- Calculator ---
     function openCalcModal() {
       haptic();
       const todayWeight = appData.weights[getActiveDateStr()];
@@ -675,7 +670,6 @@
       } else { showNotification('error', 'Bitte fülle Alter, Größe & Gewicht aus.'); }
     }
 
-    // --- Settings ---
     function populateSettingsForm() {
       document.getElementById('api-key-input').value = appData.apiKey || '';
       const activeStr = getActiveDateStr();
@@ -736,7 +730,6 @@
       reader.readAsText(file); event.target.value = '';
     }
 
-    // --- Key Verification Helper ---
     function requireApiKey() {
       if (!appData.apiKey) {
         showNotification('error', 'Bitte hinterlege den API-Schlüssel im Profil.');
@@ -784,7 +777,7 @@
         haptic(); tempMethod = 'Favorit'; editingMealId = null;
         document.getElementById('modal-title').innerText = "Aus Favoriten";
         document.getElementById('save-fav-container').classList.remove('hidden');
-        fillResultModal(fav.name || 'Mahlzeit', fav.calories, fav.protein, fav.carbs, fav.fat); 
+        fillResultModal(fav.name || 'Mahlzeit', fav.calories, fav.protein, fav.carbs, fav.fat, fav.amount || 100); 
         closeFavorites(); openModal('result-modal'); 
       };
       
@@ -799,7 +792,6 @@
     
     function closeFavorites() { forceCloseAllModals(); }
 
-    // --- Speech Recognition ---
     function initSpeechRecognition() {
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -845,7 +837,6 @@
       if(inp) inp.placeholder = 'Deine Mahlzeit...';
     }
 
-    // --- AI Integration ---
     function startAiText() { 
       haptic();
       if (!requireApiKey()) return; 
@@ -875,11 +866,14 @@
       try { lucide.createIcons(); } catch(e){}
 
       try {
-        const res = await callGroqAPI("Schätze die Nährwerte für folgendes: " + input, null);
+        const res = await callGroqAPI("Schätze die Nährwerte und Portionsgröße für folgendes: " + input, null);
         tempMethod = 'KI-Text'; editingMealId = null;
         document.getElementById('modal-title').innerText = "KI Erkennung";
         document.getElementById('save-fav-container').classList.remove('hidden');
-        fillResultModal(res.foodName, res.calories, res.protein, res.carbs, res.fat);
+        
+        // BUGFIX: amount muss übergeben werden, damit der Rechner die Skalierung kapiert
+        fillResultModal(res.foodName, res.calories, res.protein, res.carbs, res.fat, res.amount || 100);
+        
         forceCloseAllModals(); openModal('result-modal');
       } catch (e) { showNotification('error', e.message); } 
       finally { btn.innerHTML = `Analysieren`; }
@@ -904,7 +898,8 @@
         editingMealId = null;
         document.getElementById('modal-title').innerText = isLabel ? "Tabellen-Scan" : "KI Foto-Scan";
         document.getElementById('save-fav-container').classList.remove('hidden');
-        fillResultModal(res.foodName, res.calories, res.protein, res.carbs, res.fat);
+        
+        fillResultModal(res.foodName, res.calories, res.protein, res.carbs, res.fat, res.amount || 100);
         openModal('result-modal');
       } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
     }
@@ -923,12 +918,15 @@
 
     async function callGroqAPI(prompt, base64Image) {
       const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
+      
+      // NEUER SYSTEM PROMPT: Zwingt die KI dazu, exakte Mathematik anzuwenden und die Portionsgröße ("amount") mitzuliefern
       const sysInst = `Du bist ein hochpräziser Ernährungs-Experte. 
 Regeln:
 1. Achte streng auf die Nährwert-Mathematik (1g Kohlenhydrate = 4 kcal, 1g Protein = 4 kcal, 1g Fett = 9 kcal). Die berechnete Summe der Makros MUSS exakt zu den Gesamtkalorien passen.
-2. Gehe bei allgemeinen Angaben ohne Mengennennung von realistischen Durchschnittsportionen aus (z.B. Apfel = 150g, Brötchen = 70g).
-3. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
-4. Die Keys MÜSSEN exakt so heißen: foodName (String), calories (Number), protein (Number), carbs (Number), fat (Number).`;
+2. Gehe bei allgemeinen Angaben ohne Mengennennung von realistischen Durchschnittsportionen aus.
+3. Du MUSST die Menge in Gramm schätzen. Der Key heißt 'amount' (Number).
+4. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
+5. Die Keys MÜSSEN exakt so heißen: foodName (String), amount (Number), calories (Number), protein (Number), carbs (Number), fat (Number).`;
       
       const model = base64Image ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
       
@@ -975,112 +973,121 @@ Regeln:
       return JSON.parse(text);
     }
 
-   function scaleNutrients() {
-  const yourWeight = Number(document.getElementById('res-your-weight').value) || 0;
-  if (yourWeight <= 0) return;
-  
-  const factor = yourWeight / 100;
-  
-  document.getElementById('res-cal').value = Math.round(baseNutrients.cal * factor);
-  document.getElementById('res-pro').value = (baseNutrients.pro * factor).toFixed(1);
-  document.getElementById('res-carbs').value = (baseNutrients.carbs * factor).toFixed(1);
-  document.getElementById('res-fat').value = (baseNutrients.fat * factor).toFixed(1);
-}
-
-function updateBaseFromInputs() {
-  const yourWeight = Number(document.getElementById('res-your-weight').value) || 100;
-  const factorTo100 = yourWeight > 0 ? (100 / yourWeight) : 1;
-
-  baseNutrients.cal = (Number(document.getElementById('res-cal').value) || 0) * factorTo100;
-  baseNutrients.pro = (Number(document.getElementById('res-pro').value) || 0) * factorTo100;
-  baseNutrients.carbs = (Number(document.getElementById('res-carbs').value) || 0) * factorTo100;
-  baseNutrients.fat = (Number(document.getElementById('res-fat').value) || 0) * factorTo100;
-}
-   
-    // --- Results Modal & Portion Calculator Logic ---
-   function fillResultModal(n, c, p, cb, f, amount = 100) {
-  document.getElementById('res-name').value = n || ''; 
-
-  const factorTo100 = amount > 0 ? (100 / amount) : 1;
-
-  baseNutrients.cal = (Number(c) || 0) * factorTo100;
-  baseNutrients.pro = (Number(p) || 0) * factorTo100;
-  baseNutrients.carbs = (Number(cb) || 0) * factorTo100;
-  baseNutrients.fat = (Number(f) || 0) * factorTo100;
-
-  document.getElementById('res-ref-weight').value = 100;
-  document.getElementById('res-your-weight').value = amount;
-
-  document.getElementById('res-cal').value = Number(c) || 0;
-  document.getElementById('res-pro').value = Number(p) || 0;
-  document.getElementById('res-carbs').value = Number(cb) || 0;
-  document.getElementById('res-fat').value = Number(f) || 0;
-  
-  document.getElementById('res-save-fav').checked = false;
-
-  const liveRechner = document.getElementById('live-rechner');
-  if (liveRechner) {
-    if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
-      liveRechner.classList.add('hidden');
-    } else {
-      liveRechner.classList.remove('hidden');
-    }
-  }
-}
-
-function closeResultModal() {
-  forceCloseAllModals();
-  editingMealId = null; 
-}
-
-function saveFinalResult() {
-  try {
-    const n = document.getElementById('res-name').value.trim() || 'Mahlzeit';
-    const c = Number(document.getElementById('res-cal').value) || 0;
-    const p = Number(document.getElementById('res-pro').value) || 0;
-    const cb = Number(document.getElementById('res-carbs').value) || 0;
-    const f = Number(document.getElementById('res-fat').value) || 0;
-    const amount = Number(document.getElementById('res-your-weight').value) || 100;
-    const fav = document.getElementById('res-save-fav').checked;
-
-    if (!Array.isArray(appData.meals)) appData.meals = [];
-
-    if (editingMealId) {
-      const index = appData.meals.findIndex(m => m.id === editingMealId);
-      if (index !== -1) {
-        appData.meals[index] = { ...appData.meals[index], name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount };
-      }
-    } else {
-      const datePrefix = getActiveDateStr();
-      const timeNow = new Date().toTimeString().split(' ')[0];
-      const ts = `${datePrefix}T${timeNow}.000Z`;
+    // --- NEUER ROBUSTER LIVE RECHNER ---
+    function scaleNutrients() {
+      const yourWeight = Number(document.getElementById('res-your-weight').value) || 0;
+      if (yourWeight <= 0) return;
       
-      appData.meals.unshift({ id: Date.now(), name: n, calories: c, protein: p, carbs: cb, fat: f, timestamp: ts, method: tempMethod, amount: amount });
+      const factor = yourWeight / 100;
+      
+      // BUGFIX: Sicheres Runden für HTML-Zahlenfelder (kein .toFixed(1) mehr!)
+      document.getElementById('res-cal').value = Math.round(baseNutrients.cal * factor);
+      document.getElementById('res-pro').value = Math.round(baseNutrients.pro * factor * 10) / 10;
+      document.getElementById('res-carbs').value = Math.round(baseNutrients.carbs * factor * 10) / 10;
+      document.getElementById('res-fat').value = Math.round(baseNutrients.fat * factor * 10) / 10;
     }
 
-    if (!editingMealId && fav) {
-      if (!Array.isArray(appData.favorites)) appData.favorites = [];
-      const isAlreadyFav = appData.favorites.some(x => {
-        if(!x.name) return false;
-        return String(x.name).toLowerCase() === String(n).toLowerCase();
-      });
-      if(!isAlreadyFav) {
-         appData.favorites.push({ id: Date.now()+1, name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount });
+    function updateBaseFromInputs() {
+      const yourWeight = Number(document.getElementById('res-your-weight').value) || 100;
+      const factorTo100 = yourWeight > 0 ? (100 / yourWeight) : 1;
+
+      baseNutrients.cal = (Number(document.getElementById('res-cal').value) || 0) * factorTo100;
+      baseNutrients.pro = (Number(document.getElementById('res-pro').value) || 0) * factorTo100;
+      baseNutrients.carbs = (Number(document.getElementById('res-carbs').value) || 0) * factorTo100;
+      baseNutrients.fat = (Number(document.getElementById('res-fat').value) || 0) * factorTo100;
+    }
+   
+    function fillResultModal(n, c, p, cb, f, amount = 100) {
+      document.getElementById('res-name').value = n || ''; 
+
+      // Stellt die exakte 100g Basis her, unabhängig davon, welche Portionsgröße die KI ausgibt
+      const factorTo100 = amount > 0 ? (100 / amount) : 1;
+
+      baseNutrients.cal = (Number(c) || 0) * factorTo100;
+      baseNutrients.pro = (Number(p) || 0) * factorTo100;
+      baseNutrients.carbs = (Number(cb) || 0) * factorTo100;
+      baseNutrients.fat = (Number(f) || 0) * factorTo100;
+
+      document.getElementById('res-ref-weight').value = 100;
+      document.getElementById('res-your-weight').value = amount;
+
+      document.getElementById('res-cal').value = Number(c) || 0;
+      document.getElementById('res-pro').value = Number(p) || 0;
+      document.getElementById('res-carbs').value = Number(cb) || 0;
+      document.getElementById('res-fat').value = Number(f) || 0;
+      
+      document.getElementById('res-save-fav').checked = false;
+
+      const liveRechner = document.getElementById('live-rechner');
+      if (liveRechner) {
+        if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
+          liveRechner.classList.add('hidden');
+        } else {
+          liveRechner.classList.remove('hidden');
+        }
       }
     }
 
-    saveData(); 
-    switchTab('diary');
-    showNotification('success', `Eintrag gespeichert!`);
+    function closeResultModal() {
+      forceCloseAllModals();
+      editingMealId = null; 
+    }
 
-  } catch(err) {
-    console.error("Kritischer Fehler beim Speichern:", err);
-    showNotification('error', 'Fehler: ' + err.message);
-  } finally {
-    forceCloseAllModals();
-    editingMealId = null;
-  }
-}
+    function saveFinalResult() {
+      try {
+        const n = document.getElementById('res-name').value.trim() || 'Mahlzeit';
+        let c = Number(document.getElementById('res-cal').value) || 0;
+        const p = Number(document.getElementById('res-pro').value) || 0;
+        const cb = Number(document.getElementById('res-carbs').value) || 0;
+        const f = Number(document.getElementById('res-fat').value) || 0;
+        const amount = Number(document.getElementById('res-your-weight').value) || 100;
+        const fav = document.getElementById('res-save-fav').checked;
+
+        // BUGFIX DASHBOARD-SCHUTZ: Zwingt Kalorien zur Korrektheit, falls die KI sich stark verrechnet hat
+        const trueKcal = Math.round((cb * 4) + (p * 4) + (f * 9));
+        // Erlaubt minimale Abweichungen durch Ballaststoffe (die anders verrechnet werden), korrigiert aber grobe K.I. Halluzinationen
+        if (Math.abs(c - trueKcal) > 30 && trueKcal > 0) {
+            c = trueKcal; 
+        }
+
+        if (!Array.isArray(appData.meals)) appData.meals = [];
+
+        if (editingMealId) {
+          const index = appData.meals.findIndex(m => m.id === editingMealId);
+          if (index !== -1) {
+            appData.meals[index] = { ...appData.meals[index], name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount };
+          }
+        } else {
+          const datePrefix = getActiveDateStr();
+          const timeNow = new Date().toTimeString().split(' ')[0];
+          const ts = `${datePrefix}T${timeNow}.000Z`;
+          
+          appData.meals.unshift({ id: Date.now(), name: n, calories: c, protein: p, carbs: cb, fat: f, timestamp: ts, method: tempMethod, amount: amount });
+        }
+
+        if (!editingMealId && fav) {
+          if (!Array.isArray(appData.favorites)) appData.favorites = [];
+          const isAlreadyFav = appData.favorites.some(x => {
+            if(!x.name) return false;
+            return String(x.name).toLowerCase() === String(n).toLowerCase();
+          });
+          if(!isAlreadyFav) {
+             appData.favorites.push({ id: Date.now()+1, name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount });
+          }
+        }
+
+        saveData(); 
+        switchTab('diary');
+        showNotification('success', `Eintrag gespeichert!`);
+
+      } catch(err) {
+        console.error("Kritischer Fehler beim Speichern:", err);
+        showNotification('error', 'Fehler: ' + err.message);
+      } finally {
+        forceCloseAllModals();
+        editingMealId = null;
+      }
+    }
 
     function showNotification(type, msg) {
       haptic();
@@ -1115,7 +1122,6 @@ function openScanner() {
     (decodedText) => {
       haptic();
       closeScanner(); 
-      
       fetchFoodData(decodedText); 
     },
     (errorMessage) => { 
@@ -1150,9 +1156,14 @@ async function fetchFoodData(barcode) {
 
     if (data.status === 1) {
       const product = data.product;
-      
       const name = product.product_name || "Unbekanntes Produkt";
-      const kcal = product.nutriments['energy-kcal_100g'] || 0;
+      
+      // BUGFIX BARCODE: Falls die DB keine kcal hat, sondern nur kJ (Energie in Joule), umrechnen!
+      let kcal = product.nutriments['energy-kcal_100g'];
+      if (kcal === undefined) {
+        kcal = product.nutriments['energy_100g'] ? (product.nutriments['energy_100g'] / 4.184) : 0;
+      }
+      kcal = Math.round(kcal);
       
       tempMethod = 'KI-Scanner'; 
       editingMealId = null;
@@ -1164,7 +1175,8 @@ async function fetchFoodData(barcode) {
         kcal, 
         product.nutriments['proteins_100g'] || 0, 
         product.nutriments['carbohydrates_100g'] || 0, 
-        product.nutriments['fat_100g'] || 0
+        product.nutriments['fat_100g'] || 0,
+        100
       );
       
       openModal('result-modal');
