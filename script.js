@@ -856,7 +856,7 @@
       document.getElementById('camera-input').click(); 
     }
 
-    async function processAiText() {
+     async function processAiText() {
       const input = document.getElementById('ai-text-input').value.trim();
       if (!input) return;
       if (isRecording && recognition) recognition.stop();
@@ -866,12 +866,13 @@
       try { lucide.createIcons(); } catch(e){}
 
       try {
-        const res = await callGroqAPI("Schätze die Nährwerte und Portionsgröße für folgendes: " + input, null);
+        // NEU: Simpler Prompt, da die Haupt-Regeln jetzt sicher im Hintergrund (callGroqAPI) liegen
+        const res = await callGroqAPI("Analysiere diese Mahlzeit: " + input, null);
+        
         tempMethod = 'KI-Text'; editingMealId = null;
         document.getElementById('modal-title').innerText = "KI Erkennung";
         document.getElementById('save-fav-container').classList.remove('hidden');
         
-        // BUGFIX: amount muss übergeben werden, damit der Rechner die Skalierung kapiert
         fillResultModal(res.foodName, res.calories, res.protein, res.carbs, res.fat, res.amount || 100);
         
         forceCloseAllModals(); openModal('result-modal');
@@ -887,10 +888,11 @@
       try {
         const b64 = await convertFileToBase64(file);
         
-        let prompt = "Schätze die Nährwerte für das Essen auf diesem Bild ab. Achte zwingend auf die Portionsgröße und zähle die sichtbaren Elemente. Berechne die Werte NUR für die tatsächlich sichtbare Menge. Gehe im Zweifel eher von durchschnittlichen oder kleinen Größen aus. Achte darauf, dass die Kalorien mathematisch exakt zu den Makros passen.";
+        // NEU: Klarer Befehl für Fotos vs. Nährwerttabellen
+        let prompt = "Analysiere das Essen auf diesem Bild. Berechne das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller/Bild siehst.";
         
         if (isLabel) {
-            prompt = "Lies die Nährwerttabelle auf diesem Bild. Extrahiere die Kalorien (kcal), Protein (Eiweiß), Kohlenhydrate und Fett. Wenn Werte 'pro Portion' angegeben sind, nimm diese. Ansonsten nimm die 'pro 100g' Werte. Als foodName setze 'Gescannter Artikel'.";
+            prompt = "Lies die Nährwerttabelle auf diesem Bild. Gib mir zwingend die Werte für exakt 100g (oder 100ml) aus. Setze den Wert 'amount' zwingend auf 100. Als foodName setze 'Gescannter Artikel'.";
         }
 
         const res = await callGroqAPI(prompt, b64);
@@ -916,15 +918,14 @@
       });
     }
 
-    async function callGroqAPI(prompt, base64Image) {
+   async function callGroqAPI(prompt, base64Image) {
       const endpoint = `https://api.groq.com/openai/v1/chat/completions`;
       
-      // NEUER SYSTEM PROMPT: Zwingt die KI dazu, exakte Mathematik anzuwenden und die Portionsgröße ("amount") mitzuliefern
       const sysInst = `Du bist ein hochpräziser Ernährungs-Experte. 
 Regeln:
-1. Achte streng auf die Nährwert-Mathematik (1g Kohlenhydrate = 4 kcal, 1g Protein = 4 kcal, 1g Fett = 9 kcal). Die berechnete Summe der Makros MUSS exakt zu den Gesamtkalorien passen.
-2. Gehe bei allgemeinen Angaben ohne Mengennennung von realistischen Durchschnittsportionen aus.
-3. Du MUSST die Menge in Gramm schätzen. Der Key heißt 'amount' (Number).
+1. Du bist eine virtuelle Waage. Schätze das GESAMTGEWICHT der Portion realistisch ein. (Beispiel: Ein normaler Apfel wiegt ca. 180g-200g und hat etwa 95 kcal. Ein Teller Nudeln wiegt ca. 350g-400g).
+2. Berechne die GESAMTKALORIEN und Makros für EXAKT DIESE geschätzte Gesamtportion.
+3. Die Mathematik muss zwingend stimmen: (carbs * 4) + (protein * 4) + (fat * 9) = calories.
 4. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
 5. Die Keys MÜSSEN exakt so heißen: foodName (String), amount (Number), calories (Number), protein (Number), carbs (Number), fat (Number).`;
       
@@ -966,21 +967,20 @@ Regeln:
         const errData = await response.json();
         throw new Error(errData.error?.message || 'API Fehler');
       }
-       
 
       const data = await response.json();
       let text = data.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
       return JSON.parse(text);
     }
 
-    // --- NEUER ROBUSTER LIVE RECHNER ---
+   // --- NEUER ROBUSTER LIVE RECHNER ---
     function scaleNutrients() {
       const yourWeight = Number(document.getElementById('res-your-weight').value) || 0;
       if (yourWeight <= 0) return;
       
       const factor = yourWeight / 100;
       
-      // BUGFIX: Sicheres Runden für HTML-Zahlenfelder (kein .toFixed(1) mehr!)
+      // Saubere mathematische Rundung, damit HTML-Zahlenfelder nicht verrückt spielen
       document.getElementById('res-cal').value = Math.round(baseNutrients.cal * factor);
       document.getElementById('res-pro').value = Math.round(baseNutrients.pro * factor * 10) / 10;
       document.getElementById('res-carbs').value = Math.round(baseNutrients.carbs * factor * 10) / 10;
@@ -1000,7 +1000,7 @@ Regeln:
     function fillResultModal(n, c, p, cb, f, amount = 100) {
       document.getElementById('res-name').value = n || ''; 
 
-      // Stellt die exakte 100g Basis her, unabhängig davon, welche Portionsgröße die KI ausgibt
+      // Rechnet die KI-Gesamtwerte im Hintergrund auf 100g um, damit die Skalierung beim Tippen immer stimmt
       const factorTo100 = amount > 0 ? (100 / amount) : 1;
 
       baseNutrients.cal = (Number(c) || 0) * factorTo100;
@@ -1009,22 +1009,22 @@ Regeln:
       baseNutrients.fat = (Number(f) || 0) * factorTo100;
 
       document.getElementById('res-ref-weight').value = 100;
+      
+      // Trägt das von der KI geschätzte Gesamtgewicht ein (du musst nichts tippen!)
       document.getElementById('res-your-weight').value = amount;
 
-      document.getElementById('res-cal').value = Number(c) || 0;
-      document.getElementById('res-pro').value = Number(p) || 0;
-      document.getElementById('res-carbs').value = Number(cb) || 0;
-      document.getElementById('res-fat').value = Number(f) || 0;
+      // Trägt die fertig berechneten Gesamtkalorien ein
+      document.getElementById('res-cal').value = Math.round(Number(c) || 0);
+      document.getElementById('res-pro').value = Math.round((Number(p) || 0) * 10) / 10;
+      document.getElementById('res-carbs').value = Math.round((Number(cb) || 0) * 10) / 10;
+      document.getElementById('res-fat').value = Math.round((Number(f) || 0) * 10) / 10;
       
       document.getElementById('res-save-fav').checked = false;
 
+      // Zeigt den Rechner ab sofort IMMER an, damit du volle Kontrolle hast
       const liveRechner = document.getElementById('live-rechner');
       if (liveRechner) {
-        if (tempMethod === 'KI-Text' || tempMethod === 'KI-Foto') {
-          liveRechner.classList.add('hidden');
-        } else {
-          liveRechner.classList.remove('hidden');
-        }
+         liveRechner.classList.remove('hidden');
       }
     }
 
