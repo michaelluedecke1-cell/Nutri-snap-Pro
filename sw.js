@@ -1,11 +1,10 @@
-const CACHE_NAME = 'nutrisnap-cache-v9';
+const CACHE_NAME = 'nutrisnap-cache-v10'; // Version erhöht: Zwingt den Browser, den alten Fehler zu löschen!
 
 // Kritische Ressourcen, die sofort offline verfügbar sein müssen
 const PRECACHE_ASSETS = [
   './',
   'index.html',
-  'manifest.json',
-  '1000032975.png'
+  'manifest.json'
 ];
 
 // Externe CDN-Ressourcen, die wir dynamisch mitschreiben und cachen
@@ -48,7 +47,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Verhindert Probleme bei POST-Anfragen (wie z.B. Gemini API Aufrufen)
+  // Verhindert Probleme bei POST-Anfragen (wie z.B. API Aufrufen)
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
@@ -68,7 +67,7 @@ self.addEventListener('fetch', (event) => {
       // Falls nicht im Cache, normal aus dem Web laden
       return fetch(event.request)
         .then((response) => {
-          // Nur erfolgreiche Anfragen cachen (ausgenommen Third-Party-APIs wie Gemini)
+          // Nur erfolgreiche Anfragen cachen (ausgenommen Third-Party-APIs)
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
