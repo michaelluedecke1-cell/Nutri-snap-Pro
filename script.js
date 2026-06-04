@@ -891,35 +891,35 @@ async function processAiPhoto(e) {
         let prompt = "Analyze the food in this image. Estimate total weight and total calories for EVERYTHING you see. Return ONLY JSON with keys: foodName, amount, calories, protein, carbs, fat.";
         
         if (isLabel) {
-            // TRICK: Die KI darf nicht mehr übersetzen! Sie muss die exakten deutschen Wörter vom Etikett nutzen.
-            prompt = `Lies die Tabelle ab. Antworte NUR mit JSON. Nutze EXAKT diese deutschen Wörter als Schlüssel, erfinde keine anderen:
-{
-  "Brennwert_kcal": 0,
-  "Fett": 0,
-  "Kohlenhydrate": 0,
-  "Eiweiss": 0
-}`;
+            // Räumliche Zwangsjacke: Wir sagen ihr exakt, wo was steht.
+            prompt = `You are reading a German nutrition label. Read carefully from TOP to BOTTOM.
+            1. Near the top is "Brennwert" -> This is calories (kcal).
+            2. Below that is "Fett" -> This is fat. (Small number like 1,2).
+            3. Below that is "Kohlenhydrate" -> This is carbs. (Small number like 1,2).
+            4. Near the bottom is "Eiweiß" -> This is protein. (LARGE number like 91).
+            
+            CRITICAL WARNING: Do NOT swap protein and carbs! Protein is the large number near the bottom!
+
+            Output ONLY JSON:
+            {
+              "foodName": "Gescannter Artikel",
+              "amount": 100,
+              "calories": 0,
+              "protein": 0,
+              "carbs": 0,
+              "fat": 0
+            }`;
         }
 
         const res = await callGroqAPI(prompt, b64);
         
-        let finalCal = 0, finalPro = 0, finalCarbs = 0, finalFat = 0;
+        let finalCal = Number(res.calories) || 0;
+        let finalPro = Number(res.protein) || 0;
+        let finalCarbs = Number(res.carbs) || 0;
+        let finalFat = Number(res.fat) || 0;
 
-        if (isLabel) {
-            // Wir greifen die deutschen Werte ab und packen sie idiotensicher in die richtigen Variablen
-            finalCal = Number(res.Brennwert_kcal) || Number(res.calories) || 0;
-            finalFat = Number(res.Fett) || Number(res.fat) || 0;
-            finalCarbs = Number(res.Kohlenhydrate) || Number(res.carbs) || 0;
-            finalPro = Number(res.Eiweiss) || Number(res.protein) || 0;
-
-            if (finalCal > 900) {
-                finalCal = Math.round(finalCal / 4.184); 
-            }
-        } else {
-            finalCal = Number(res.calories) || 0;
-            finalPro = Number(res.protein) || 0;
-            finalCarbs = Number(res.carbs) || 0;
-            finalFat = Number(res.fat) || 0;
+        if (isLabel && finalCal > 900) {
+            finalCal = Math.round(finalCal / 4.184); 
         }
         
         tempMethod = isLabel ? 'KI-Scanner' : 'KI-Foto'; 
@@ -927,7 +927,9 @@ async function processAiPhoto(e) {
         document.getElementById('modal-title').innerText = isLabel ? "Tabellen-Scan" : "KI Foto-Scan";
         document.getElementById('save-fav-container').classList.remove('hidden');
         
-        fillResultModal("Gescannter Artikel", finalCal, finalPro, finalCarbs, finalFat, res.amount || 100);
+        let safeName = (res.foodName && res.foodName.toLowerCase() !== "lego + brio") ? res.foodName : "Gescannter Artikel";
+        
+        fillResultModal(safeName, finalCal, finalPro, finalCarbs, finalFat, res.amount || 100);
         openModal('result-modal');
       } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
     }
