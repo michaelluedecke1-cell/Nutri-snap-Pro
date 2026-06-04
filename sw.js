@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutrisnap-cache-v10'; // Version erhöht: Zwingt den Browser, den alten Fehler zu löschen!
+const CACHE_NAME = 'nutrisnap-cache-v11';
 
 // Kritische Ressourcen, die sofort offline verfügbar sein müssen
 const PRECACHE_ASSETS = [
