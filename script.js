@@ -891,21 +891,36 @@ async function processAiPhoto(e) {
         let prompt = "Analysiere das Essen auf diesem Bild. Berechne das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller/Bild siehst.";
         
         if (isLabel) {
-            // NEU: Zwingt die KI, den kJ-Wert zu ignorieren und nur die kcal zu nehmen!
-            prompt = "WICHTIG: Du bist ein strenges OCR-Programm. Lies EXAKT die Zahlen aus der Spalte 'pro 100g'. ACHTUNG BEI KALORIEN: Es stehen dort oft kJ und kcal. Ignoriere die große kJ-Zahl komplett! Nimm AUSSCHLIESSLICH den kleineren kcal-Wert (steht oft in Klammern). Achte extrem penibel auf Kommastellen (z.B. 1,2g). Suche nach 'Eiweiß' für protein, 'Kohlenhydrate' für carbs und 'Fett' für fat. Setze 'amount' zwingend auf 100. foodName ist 'Gescannter Artikel'.";
+            prompt = "WICHTIG: Du bist ein strenges OCR-Programm. Lies EXAKT die Zahlen aus der Spalte 'pro 100g'. Nimm für Kalorien den kcal-Wert, NICHT kJ. Suche nach 'Eiweiß' für protein, 'Kohlenhydrate' für carbs und 'Fett' für fat. Setze 'amount' zwingend auf 100. foodName ist 'Gescannter Artikel'.";
         }
 
         const res = await callGroqAPI(prompt, b64);
+        
+        // --- NEUER KI-IDIOTENSCHUTZ ---
+        let finalCal = Number(res.calories) || 0;
+        let p = Number(res.protein) || 0;
+        let c = Number(res.carbs) || 0;
+        let f = Number(res.fat) || 0;
+
+        if (isLabel) {
+            const checkKcal = (p * 4) + (c * 4) + (f * 9);
+            // Wenn die gelieferten Kalorien mehr als doppelt so hoch sind wie die Makro-Summe, hat die KI zu 100% kJ gelesen!
+            if (finalCal > (checkKcal * 2) && checkKcal > 0) {
+                finalCal = Math.round(finalCal / 4.184); // Zwingt den Wert sofort zurück auf echte Kcal
+            }
+        }
+        // ---------------------------------
+        
         tempMethod = isLabel ? 'KI-Scanner' : 'KI-Foto'; 
         editingMealId = null;
         document.getElementById('modal-title').innerText = isLabel ? "Tabellen-Scan" : "KI Foto-Scan";
         document.getElementById('save-fav-container').classList.remove('hidden');
         
-        fillResultModal(res.foodName, res.calories, res.protein, res.carbs, res.fat, res.amount || 100);
+        // Nutzt jetzt unseren gesicherten finalCal-Wert
+        fillResultModal(res.foodName, finalCal, res.protein, res.carbs, res.fat, res.amount || 100);
         openModal('result-modal');
       } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
     }
-
     function convertFileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader(); reader.readAsDataURL(file);
