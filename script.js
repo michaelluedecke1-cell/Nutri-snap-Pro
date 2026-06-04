@@ -880,7 +880,7 @@
       finally { btn.innerHTML = `Analysieren`; }
     }
 
-    async function processAiPhoto(e) {
+   async function processAiPhoto(e) {
       const file = e.target.files[0]; if (!file) return; e.target.value = '';
       const isLabel = currentPhotoType === 'label';
       showNotification('info', isLabel ? 'Lese Tabelle...' : 'Analysiere Foto...');
@@ -888,11 +888,10 @@
       try {
         const b64 = await convertFileToBase64(file);
         
-        // NEU: Klarer Befehl für Fotos vs. Nährwerttabellen
         let prompt = "Analysiere das Essen auf diesem Bild. Berechne das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller/Bild siehst.";
         
         if (isLabel) {
-            prompt = "Lies die Nährwerttabelle auf diesem Bild. Gib mir zwingend die Werte für exakt 100g (oder 100ml) aus. Setze den Wert 'amount' zwingend auf 100. Als foodName setze 'Gescannter Artikel'.";
+            prompt = "WICHTIG: Du bist ein reines OCR-Texterkennungs-Programm. Lies EXAKT die Zahlen aus der Spalte 'pro 100g' ab. Erfinde absolut NICHTS. Suche nach 'Brennwert (kcal)' für calories, 'Eiweiß' oder 'Protein' für protein, 'Kohlenhydrate' für carbs und 'Fett' für fat. Wenn auf dem Etikett 91g Eiweiß steht, MUSST du 91 ausgeben. Setze 'amount' zwingend auf 100. foodName ist 'Gescannter Artikel'.";
         }
 
         const res = await callGroqAPI(prompt, b64);
