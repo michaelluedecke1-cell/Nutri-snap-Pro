@@ -891,7 +891,8 @@ async function processAiPhoto(e) {
         let prompt = "Analysiere das Essen auf diesem Bild. Berechne das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller/Bild siehst.";
         
         if (isLabel) {
-            prompt = "WICHTIG: Du bist ein strenges OCR-Programm. Lies EXAKT die Zahlen aus der Spalte 'pro 100g'. Achte extrem penibel auf Kommastellen bei kleinen Werten (z.B. 1,2g). Erfinde nichts, rate nichts! Suche 'Brennwert (kcal)' für calories, 'Eiweiß' für protein, 'Kohlenhydrate' für carbs und 'Fett' für fat. Setze 'amount' zwingend auf 100. foodName ist 'Gescannter Artikel'.";
+            // NEU: Zwingt die KI, den kJ-Wert zu ignorieren und nur die kcal zu nehmen!
+            prompt = "WICHTIG: Du bist ein strenges OCR-Programm. Lies EXAKT die Zahlen aus der Spalte 'pro 100g'. ACHTUNG BEI KALORIEN: Es stehen dort oft kJ und kcal. Ignoriere die große kJ-Zahl komplett! Nimm AUSSCHLIESSLICH den kleineren kcal-Wert (steht oft in Klammern). Achte extrem penibel auf Kommastellen (z.B. 1,2g). Suche nach 'Eiweiß' für protein, 'Kohlenhydrate' für carbs und 'Fett' für fat. Setze 'amount' zwingend auf 100. foodName ist 'Gescannter Artikel'.";
         }
 
         const res = await callGroqAPI(prompt, b64);
