@@ -888,19 +888,19 @@ async function processAiPhoto(e) {
       try {
         const b64 = await convertFileToBase64(file);
         
-        let prompt = "Analysiere das Essen auf diesem Bild. Berechne das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller/Bild siehst.";
+        let prompt = "Analyze the food in this image. Estimate total weight and total calories for EVERYTHING you see. Return ONLY JSON with keys: foodName, amount, calories, protein, carbs, fat.";
         
         if (isLabel) {
-            // Wir zwingen die KI in eine strikte Schablone, damit sie die Werte nicht mehr vertauscht.
-            prompt = `Lies die Nährwertangaben "pro 100g" aus diesem Bild ab.
-Gib EXAKT dieses JSON-Format aus und ersetze die Klammern durch die echten Zahlen aus dem Bild. Achte auf Kommas. Erfinde nichts!
+            // Extrem simples Englisch mit klaren Zahlen, damit es keinen "Fehler 13" (JSON Parse Error) mehr gibt.
+            prompt = `Extract the "per 100g" nutritional values from this label.
+Return ONLY valid JSON. No markdown, no extra text. Replace the 0s with the numbers from the label.
 {
   "foodName": "Gescannter Artikel",
   "amount": 100,
-  "calories": [Suche die Zahl bei kcal],
-  "protein": [Suche die Zahl bei Eiweiß],
-  "carbs": [Suche die Zahl bei Kohlenhydrate],
-  "fat": [Suche die Zahl bei Fett]
+  "calories": 0,
+  "protein": 0,
+  "carbs": 0,
+  "fat": 0
 }`;
         }
 
@@ -911,8 +911,7 @@ Gib EXAKT dieses JSON-Format aus und ersetze die Klammern durch die echten Zahle
         let finalCarbs = Number(res.carbs) || 0;
         let finalFat = Number(res.fat) || 0;
 
-        // Absoluter Physik-Idiotenschutz: Es GIBT kein Lebensmittel mit mehr als 900 kcal pro 100g (Pures Fett = 900).
-        // Wenn die Zahl größer ist, hat die KI 100%ig die kJ-Zahl gelesen.
+        // Harter Physik-Blocker: Pures Fett hat 900 kcal. Alles darüber MUSS der kJ-Wert sein.
         if (isLabel && finalCal > 900) {
             finalCal = Math.round(finalCal / 4.184); 
         }
@@ -922,7 +921,10 @@ Gib EXAKT dieses JSON-Format aus und ersetze die Klammern durch die echten Zahle
         document.getElementById('modal-title').innerText = isLabel ? "Tabellen-Scan" : "KI Foto-Scan";
         document.getElementById('save-fav-container').classList.remove('hidden');
         
-        fillResultModal(res.foodName, finalCal, finalPro, finalCarbs, finalFat, res.amount || 100);
+        // Verhindert erfundene Namen wie "Lego"
+        let safeName = (res.foodName && res.foodName.toLowerCase() !== "lego + brio") ? res.foodName : "Gescannter Artikel";
+        
+        fillResultModal(safeName, finalCal, finalPro, finalCarbs, finalFat, res.amount || 100);
         openModal('result-modal');
       } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
     }
