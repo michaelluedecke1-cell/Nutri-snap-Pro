@@ -891,33 +891,38 @@ async function processAiPhoto(e) {
         let prompt = "Analysiere das Essen auf diesem Bild. Berechne das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller/Bild siehst.";
         
         if (isLabel) {
-            prompt = "WICHTIG: Du bist ein strenges OCR-Programm. Lies EXAKT die Zahlen aus der Spalte 'pro 100g'. Nimm für Kalorien den kcal-Wert, NICHT kJ. Suche nach 'Eiweiß' für protein, 'Kohlenhydrate' für carbs und 'Fett' für fat. Setze 'amount' zwingend auf 100. foodName ist 'Gescannter Artikel'.";
+            // Wir zwingen die KI in eine strikte Schablone, damit sie die Werte nicht mehr vertauscht.
+            prompt = `Lies die Nährwertangaben "pro 100g" aus diesem Bild ab.
+Gib EXAKT dieses JSON-Format aus und ersetze die Klammern durch die echten Zahlen aus dem Bild. Achte auf Kommas. Erfinde nichts!
+{
+  "foodName": "Gescannter Artikel",
+  "amount": 100,
+  "calories": [Suche die Zahl bei kcal],
+  "protein": [Suche die Zahl bei Eiweiß],
+  "carbs": [Suche die Zahl bei Kohlenhydrate],
+  "fat": [Suche die Zahl bei Fett]
+}`;
         }
 
         const res = await callGroqAPI(prompt, b64);
         
-        // --- NEUER KI-IDIOTENSCHUTZ ---
         let finalCal = Number(res.calories) || 0;
-        let p = Number(res.protein) || 0;
-        let c = Number(res.carbs) || 0;
-        let f = Number(res.fat) || 0;
+        let finalPro = Number(res.protein) || 0;
+        let finalCarbs = Number(res.carbs) || 0;
+        let finalFat = Number(res.fat) || 0;
 
-        if (isLabel) {
-            const checkKcal = (p * 4) + (c * 4) + (f * 9);
-            // Wenn die gelieferten Kalorien mehr als doppelt so hoch sind wie die Makro-Summe, hat die KI zu 100% kJ gelesen!
-            if (finalCal > (checkKcal * 2) && checkKcal > 0) {
-                finalCal = Math.round(finalCal / 4.184); // Zwingt den Wert sofort zurück auf echte Kcal
-            }
+        // Absoluter Physik-Idiotenschutz: Es GIBT kein Lebensmittel mit mehr als 900 kcal pro 100g (Pures Fett = 900).
+        // Wenn die Zahl größer ist, hat die KI 100%ig die kJ-Zahl gelesen.
+        if (isLabel && finalCal > 900) {
+            finalCal = Math.round(finalCal / 4.184); 
         }
-        // ---------------------------------
         
         tempMethod = isLabel ? 'KI-Scanner' : 'KI-Foto'; 
         editingMealId = null;
         document.getElementById('modal-title').innerText = isLabel ? "Tabellen-Scan" : "KI Foto-Scan";
         document.getElementById('save-fav-container').classList.remove('hidden');
         
-        // Nutzt jetzt unseren gesicherten finalCal-Wert
-        fillResultModal(res.foodName, finalCal, res.protein, res.carbs, res.fat, res.amount || 100);
+        fillResultModal(res.foodName, finalCal, finalPro, finalCarbs, finalFat, res.amount || 100);
         openModal('result-modal');
       } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
     }
