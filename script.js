@@ -48,6 +48,7 @@
     let currentDate = new Date();
     let tempMethod = 'Manuell';
     let editingMealId = null; 
+    let editingFavoriteId = null;
     let calcFinalResult = 0; 
     let currentPhotoType = 'meal'; 
     let chartMode = 'kcal'; 
@@ -758,12 +759,15 @@
       const itemEl = document.createElement('div');
       itemEl.className = 'w-full bg-white p-3 rounded-2xl flex justify-between items-center border border-gray-100 shadow-sm transition-all';
       
-      itemEl.innerHTML = `
+     itemEl.innerHTML = `
         <div class="flex-1 cursor-pointer active:scale-[0.98]" id="load-fav-${fav.id}">
           <div class="font-bold text-gray-800">${fav.name || 'Ohne Name'}</div>
           <div class="text-xs font-bold text-orange-600 mt-1">${fav.calories || 0} kcal</div>
         </div>
         <div class="flex items-center gap-1 ml-2">
+          <button onclick="editFavorite(${fav.id})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors active:scale-95">
+            <i data-lucide="pencil" class="w-5 h-5 pointer-events-none"></i>
+          </button>
           <button onclick="deleteFavorite(${fav.id})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-95">
             <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
           </button>
@@ -772,6 +776,7 @@
           </button>
         </div>
       `;
+    
       
       const loadAction = () => { 
         haptic(); tempMethod = 'Favorit'; editingMealId = null;
@@ -789,7 +794,23 @@
   }
   lucide.createIcons(); openModal('fav-modal');
 }
-    
+    function editFavorite(id) {
+  haptic();
+  const fav = appData.favorites.find(f => f.id === id);
+  if(!fav) return;
+  
+  editingFavoriteId = id; // Die App weiß jetzt: Wir bearbeiten einen Favoriten
+  editingMealId = null;   // Zur Sicherheit Tagebuch-Modus zurücksetzen
+  
+  document.getElementById('modal-title').innerText = "Favorit bearbeiten";
+  document.getElementById('save-fav-container').classList.add('hidden'); // Checkbox verstecken
+  
+  // Werte in das bekannte Live-Rechner-Fenster laden
+  fillResultModal(fav.name || 'Mahlzeit', fav.calories, fav.protein, fav.carbs, fav.fat, fav.amount || 100);
+  
+  closeFavorites(); 
+  openModal('result-modal');
+}
     function closeFavorites() { forceCloseAllModals(); }
 
     function initSpeechRecognition() {
@@ -986,7 +1007,7 @@ Regeln:
         body: JSON.stringify({ 
           model: model,
           messages: messages, 
-          temperature: 0.1 
+          temperature: 0,
         })
       });
 
@@ -1058,6 +1079,7 @@ Regeln:
     function closeResultModal() {
       forceCloseAllModals();
       editingMealId = null; 
+      editingFavoriteId = null;
     }
 
     function saveFinalResult() {
@@ -1076,6 +1098,20 @@ Regeln:
         if (Math.abs(c - trueKcal) > 30 && trueKcal > 0) {
             c = trueKcal; 
         }
+        // --- FAVORITEN-SPEICHER-UMLEITUNG ---
+        if (editingFavoriteId) {
+          const index = appData.favorites.findIndex(f => f.id === editingFavoriteId);
+          if (index !== -1) {
+            appData.favorites[index] = { ...appData.favorites[index], name: n, calories: c, protein: p, carbs: cb, fat: f, amount: amount };
+            saveData();
+            showNotification('success', 'Favorit erfolgreich aktualisiert!');
+            forceCloseAllModals();
+            editingFavoriteId = null;
+            openFavorites(); 
+          }
+          return; 
+        }
+        // -------------------------------------
 
         if (!Array.isArray(appData.meals)) appData.meals = [];
 
