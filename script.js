@@ -907,9 +907,9 @@ async function processAiPhoto(e) {
       showNotification('info', isLabel ? 'Lese Tabelle...' : 'Analysiere Foto...');
       
       try {
-        const b64 = await convertFileToBase64(file);
+        const b64 = await convertFileToBase64(file, isLabel); // isLabel schaltet den Filter scharf!
         
-        let prompt = "Analyze the food in this image. Estimate total weight and total calories for EVERYTHING you see. Return ONLY JSON with keys: foodName, amount, calories, protein, carbs, fat.";
+        let prompt = "Analysiere das Essen auf diesem Bild sehr genau. Identifiziere alle sichtbaren Zutaten. Schätze das Gesamtgewicht und die Gesamtkalorien für ALLES, was du auf dem Teller siehst. WICHTIG: Der 'foodName' MUSS zwingend auf DEUTSCH sein (z.B. 'Spaghetti Bolognese' statt 'Pasta with meat sauce')! Gib NUR JSON zurück mit den Keys: foodName, amount, calories, protein, carbs, fat.";
         
         if (isLabel) {
             // Räumliche Zwangsjacke: Wir sagen ihr exakt, wo was steht.
@@ -954,13 +954,50 @@ async function processAiPhoto(e) {
         openModal('result-modal');
       } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
     }
-    function convertFileToBase64(file) {
+    function convertFileToBase64(file, applyFilter = false) {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader(); reader.readAsDataURL(file);
-        reader.onload = () => {
-          let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
-          if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
-          resolve(encoded);
+        const reader = new FileReader(); 
+        reader.readAsDataURL(file);
+        
+        reader.onload = (event) => {
+          // Wenn es kein Tabellen-Scan ist, das Originalbild (wie bisher) nutzen
+          if (!applyFilter) {
+            let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+            if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
+            resolve(encoded);
+            return;
+          }
+
+          // UNSICHTBARE DUNKELKAMMER FÜR TABELLEN
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Bildgröße für die KI optimieren (max 1200px Breite)
+            const MAX_WIDTH = 1200;
+            let width = img.width;
+            let height = img.height;
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+
+            // FILTER: 100% Schwarz-Weiß und 150% Kontrast (killt Glanz & Schatten!)
+            ctx.filter = 'grayscale(100%) contrast(150%)';
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Gefiltertes Bild in Base64 umwandeln
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            let encoded = dataUrl.replace(/^data:(.*,)?/, '');
+            if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
+            resolve(encoded);
+          };
+          img.onerror = error => reject(error);
+          img.src = event.target.result;
         };
         reader.onerror = error => reject(error);
       });
