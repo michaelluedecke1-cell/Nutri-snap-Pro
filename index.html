@@ -208,6 +208,19 @@
           </button>
         </div>
 
+        <!-- Barcode Scanner -->
+<button onclick="haptic(); openScanner();" class="w-full flex items-center justify-between p-5 mb-4 rounded-3xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-[0.98]">
+  <div class="flex items-center gap-4 pointer-events-none">
+    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+      <i data-lucide="barcode" class="w-6 h-6 text-white"></i>
+    </div>
+    <div class="text-left">
+      <div class="font-bold text-white text-lg">Barcode scannen</div>
+      <div class="text-xs text-blue-100 font-medium">Produkt direkt erfassen</div>
+    </div>
+  </div>
+  <i data-lucide="chevron-right" class="w-5 h-5 text-blue-200 pointer-events-none"></i>
+</button>
         <!-- Nährwerttabelle scannen -->
         <button onclick="haptic(); startAiPhoto('label');" class="w-full flex items-center justify-between p-5 mb-4 rounded-3xl bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-900/30 transition-transform active:scale-[0.98]">
           <div class="flex items-center gap-4 pointer-events-none">
@@ -572,7 +585,46 @@
       </div>
     </div>
   </div>
+</div>
+    </div>
+  </div> <div id="scanner-modal" class="hidden fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[60] flex flex-col items-center justify-center p-4">
+    </div>
 
+  <div id="toast-container" class="fixed top-4 left-0 right-0 z-[60] flex flex-col items-center pointer-events-none space-y-2 px-4"></div>
+  <!-- 6. Barcode Scanner Modal -->
+<div id="scanner-modal" class="hidden fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[60] flex flex-col items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
+    
+    <div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
+        <i data-lucide="barcode" class="w-5 h-5 text-blue-500"></i> Barcode scannen
+      </h3>
+      <button onclick="haptic(); closeScanner();" class="text-gray-400 hover:text-red-500 p-2 bg-white rounded-full shadow-sm transition-colors active:scale-95">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    
+    <!-- Kamera-Container -->
+    <div class="relative w-full aspect-square bg-black flex items-center justify-center overflow-hidden">
+      
+      <!-- Loading State (wird per JS versteckt, sobald Kamera läuft) -->
+      <div id="scanner-loading" class="absolute inset-0 flex flex-col items-center justify-center z-10 text-white gap-3 bg-gray-900">
+        <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-blue-500"></i>
+        <span class="text-sm font-bold tracking-wide">Kamera startet...</span>
+      </div>
+      
+      <!-- Hier rendert html5-qrcode den Kamera-Feed -->
+      <div id="reader" class="w-full h-full object-cover"></div>
+    </div>
+
+    <div class="p-5 text-center bg-white">
+      <p class="text-sm text-gray-500 font-medium mb-4">Halte den Barcode mittig in die Kamera. Der Scan erfolgt automatisch.</p>
+      <button onclick="haptic(); closeScanner();" class="w-full py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors shadow-sm active:scale-95">
+        Abbrechen
+      </button>
+    </div>
+  </div>
+</div>
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed top-4 left-0 right-0 z-[60] flex flex-col items-center pointer-events-none space-y-2 px-4"></div>
 
