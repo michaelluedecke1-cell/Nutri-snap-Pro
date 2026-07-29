@@ -1007,7 +1007,7 @@ Regeln:
 4. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
 5. Die Keys MÜSSEN exakt so heißen: foodName (String), amount (Number), calories (Number), protein (Number), carbs (Number), fat (Number).`;
   
-  const model = base64Image ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
+ const model = base64Image ? "meta-llama/llama-4-scout-17b-16e-instruct" : "openai/gpt-oss-20b";
   
   let messages = [
     { role: "system", content: sysInst }
