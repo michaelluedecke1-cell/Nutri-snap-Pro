@@ -1000,10 +1000,10 @@ async function callGroqAPI(prompt, base64Image) {
   
   const sysInst = `Du bist ein hochpräziser Ernährungs-Experte. 
 Regeln:
-1. Du bist eine virtuelle Waage. Schätze das GESAMTGEWICHT der Portion realistisch ein. (Beispiel: Ein normaler Apfel wiegt ca. 180g-200g und hat etwa 95 kcal. Ein Teller Nudeln wiegt ca. 350g-400g).
+1. Du bist eine virtuelle Waage. Schätze das GESAMTGEWICHT der Portion realistisch ein.
 2. Berechne die GESAMTKALORIEN und Makros für EXAKT DIESE geschätzte Gesamtportion.
 3. Die Mathematik muss zwingend stimmen: (carbs * 4) + (protein * 4) + (fat * 9) = calories.
-4. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
+4. Antworte AUSSCHLIESSLICH im puren JSON-Format. Kein erklärender Text, kein Markdown, keine HTML-Tags.
 5. Die Keys MÜSSEN exakt so heißen: foodName (String), amount (Number), calories (Number), protein (Number), carbs (Number), fat (Number).`;
   
   const model = base64Image ? "qwen/qwen3.6-27b" : "openai/gpt-oss-120b";
@@ -1036,18 +1036,29 @@ Regeln:
     })
   });
 
+  const rawText = await response.text();
+
   if (!response.ok) {
-    const errData = await response.json();
-    throw new Error(errData.error?.message || 'API Fehler');
+    throw new Error('API Fehler: ' + rawText);
   }
 
-  const data = await response.json();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch (e) {
+    throw new Error('Server antwortete kein JSON: ' + rawText.substring(0, 100));
+  }
+
   let content = data.choices[0].message.content;
   
   let jsonMatch = content.match(/\{[\s\S]*\}/);
   let text = jsonMatch ? jsonMatch[0] : content.replace(/```json/gi, '').replace(/```/g, '').trim();
   
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new Error('KI-Antwort konnte nicht gelesen werden: ' + text);
+  }
 }
 
 // --- NEUER ROBUSTER LIVE RECHNER ---
