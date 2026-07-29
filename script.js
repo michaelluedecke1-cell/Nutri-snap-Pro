@@ -951,25 +951,19 @@ async function processAiPhoto(e) {
     openModal('result-modal');
   } catch (err) { showNotification('error', 'Fehler: ' + err.message); }
 }
+
 function convertFileToBase64(file, applyFilter = false) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader(); 
     reader.readAsDataURL(file);
     
     reader.onload = (event) => {
-      if (!applyFilter) {
-        let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
-        if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
-        resolve(encoded);
-        return;
-      }
-
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        const MAX_WIDTH = 1200;
+        const MAX_WIDTH = 800;
         let width = img.width;
         let height = img.height;
         if (width > MAX_WIDTH) {
@@ -980,10 +974,13 @@ function convertFileToBase64(file, applyFilter = false) {
         canvas.width = width;
         canvas.height = height;
 
-        ctx.filter = 'grayscale(100%) contrast(150%)';
+        if (applyFilter) {
+          ctx.filter = 'grayscale(100%) contrast(150%)';
+        }
+        
         ctx.drawImage(img, 0, 0, width, height);
         
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
         let encoded = dataUrl.replace(/^data:(.*,)?/, '');
         if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
         resolve(encoded);
