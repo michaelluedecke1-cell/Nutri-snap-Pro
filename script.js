@@ -1048,9 +1048,8 @@ Regeln:
   const data = await response.json();
   let content = data.choices[0].message.content;
   
-  // Extrahiert das JSON sicher aus der Antwort, selbst wenn Text drumherum steht
-  let jsonMatch = content.match(/\\{[\\s\\S]*?\\}/);
-  let text = jsonMatch ? jsonMatch[0] : content.replace(/\\`\\`\\`json/gi, '').replace(/\\`\\`\\`/g, '').trim();
+  let jsonMatch = content.match(/\{[\s\S]*\}/);
+  let text = jsonMatch ? jsonMatch[0] : content.replace(/```json/gi, '').replace(/```/g, '').trim();
   
   return JSON.parse(text);
 }
