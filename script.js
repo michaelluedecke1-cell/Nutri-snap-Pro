@@ -1,4 +1,3 @@
-
 // --- Service Worker & PWA ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -1007,7 +1006,7 @@ Regeln:
 4. Antworte IMMER im puren JSON-Format. KEIN Markdown (kein \`\`\`json). 
 5. Die Keys MÜSSEN exakt so heißen: foodName (String), amount (Number), calories (Number), protein (Number), carbs (Number), fat (Number).`;
   
-const model = base64Image ? "qwen/qwen3.6-27b" : "openai/gpt-oss-120b";
+  const model = base64Image ? "qwen/qwen3.6-27b" : "openai/gpt-oss-120b";
   
   let messages = [
     { role: "system", content: sysInst }
@@ -1047,7 +1046,12 @@ const model = base64Image ? "qwen/qwen3.6-27b" : "openai/gpt-oss-120b";
   }
 
   const data = await response.json();
-  let text = data.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
+  let content = data.choices[0].message.content;
+  
+  // Extrahiert das JSON sicher aus der Antwort, selbst wenn Text drumherum steht
+  let jsonMatch = content.match(/\\{[\\s\\S]*?\\}/);
+  let text = jsonMatch ? jsonMatch[0] : content.replace(/\\`\\`\\`json/gi, '').replace(/\\`\\`\\`/g, '').trim();
+  
   return JSON.parse(text);
 }
 
