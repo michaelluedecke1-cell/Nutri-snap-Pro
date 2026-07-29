@@ -1,0 +1,115 @@
+/* ===== Basis-Reset ===== */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+/* ===== Animationen ===== */
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-enter {
+  animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.toast-exit {
+  animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+}
+
+/* ===== Donut Chart ===== */
+.donut-chart {
+  background: #f3f4f6;
+  transition: background 0.5s ease;
+}
+
+/* ===== Progress Bars ===== */
+.progress-bar {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Radio Pills (Kalorienrechner) ===== */
+.radio-pill input:checked + div {
+  background-color: #2563eb;
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.radio-pill input:not(:checked) + div:hover {
+  background-color: #f1f5f9;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ===== Modale Overlay ===== */
+.modal-open {
+  overflow: hidden;
+}
+
+/* ===== Swipe-Flash ===== */
+.swipe-flash {
+  animation: flash 0.15s ease;
+}
+
+@keyframes flash {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+/* ===== Water Glasses ===== */
+#water-glasses-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#water-glasses-container > div {
+  transition: all 0.2s ease;
+}
+
+/* ===== Responsive Anpassungen ===== */
+@media (max-width: 640px) {
+  .donut-chart {
+    width: 100px;
+    height: 100px;
+  }
+  .donut-chart .w-24 {
+    width: 72px;
+    height: 72px;
+  }
+}
