@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutrisnap-cache-v14.7';
+const CACHE_NAME = 'nutrisnap-cache-v14.8';
 
 // Kritische Ressourcen, die sofort offline verfügbar sein müssen
 const PRECACHE_ASSETS = [
