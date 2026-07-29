@@ -1008,23 +1008,19 @@ Regeln:
   
   const model = base64Image ? "qwen/qwen3.6-27b" : "openai/gpt-oss-120b";
   
-  let messages = [
-    { role: "system", content: sysInst }
-  ];
+  let messages = [];
 
   if (base64Image) {
     messages.push({
       role: "user",
       content: [
-        { type: "text", text: prompt },
+        { type: "text", text: sysInst + "\n\n" + prompt },
         { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
       ]
     });
   } else {
-    messages.push({
-      role: "user",
-      content: prompt
-    });
+    messages.push({ role: "system", content: sysInst });
+    messages.push({ role: "user", content: prompt });
   }
 
   const response = await fetch(endpoint, {
